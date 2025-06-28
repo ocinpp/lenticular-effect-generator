@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted } from "vue";
 
-// const props = defineProps<{
-//   imageUrl: string
-// }>()
+const props = defineProps<{
+  imageUrl: string;
+}>();
 
 const emit = defineEmits<{
   cropped: [croppedImageData: string, cropData: any];
@@ -147,7 +147,7 @@ const handleMove = (event: MouseEvent | TouchEvent) => {
     cropArea.value.y = newY;
   } else if (isResizing.value) {
     const deltaX = coords.clientX - dragStart.value.x;
-    // const deltaY = coords.clientY - dragStart.value.y
+    // const deltaY = coords.clientY - dragStart.value.y;
 
     if (resizeHandle.value === "resize-se") {
       // Maintain 3:4 aspect ratio during resize
@@ -289,7 +289,7 @@ onUnmounted(() => {
       <div class="relative inline-block">
         <img
           ref="imageRef"
-          :src="imageUrl"
+          :src="props.imageUrl"
           alt="Image to crop"
           class="block touch-none"
           :style="{
