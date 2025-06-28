@@ -11,6 +11,7 @@ A Vue 3 + TypeScript web application that creates stunning lenticular effect car
   - Manual mode with drag controls and sliders
 - **Real-time 3D Rendering**: WebGL-based lenticular effect using Three.js
 - **Mobile-First Design**: Responsive interface optimized for mobile devices with touch support
+- **High Performance**: Optimized for smooth 60fps performance without browser crashes
 - **Progressive Web App**: Works offline and can be installed on devices
 
 ## 🔧 Technology Stack
@@ -76,7 +77,7 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 
 The lenticular effect is achieved through a custom WebGL fragment shader that:
 
-1. **Creates Fine Strips**: Divides the image into very thin vertical strips (0.003 width)
+1. **Creates Fine Strips**: Divides the image into very thin vertical strips (0.005 width)
 2. **Maps Tilt to Images**: Converts device tilt (-1 to 1) to image selection
 3. **Blends Between Images**: Smoothly transitions between adjacent images
 4. **Adds Visual Effects**:
@@ -138,11 +139,34 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 
 ### 7. Performance Optimizations
 
-- **Image Resizing**: Automatically resizes large images to max 1024px
-- **Texture Compression**: JPEG compression at 80% quality
-- **Shader Efficiency**: Pre-compiled shaders with optimized uniforms
-- **Memory Management**: Proper cleanup of event listeners and resources
+#### **Rendering Performance**
+
+- **60fps Throttling**: Limited updates to ~60fps (16ms intervals) for smooth performance
+- **Texture Optimization**: Reduced texture size to 512px with 70% JPEG compression
+- **Shader Efficiency**: Simplified fragment shader with reduced mathematical complexity
+- **Geometry Optimization**: Lower polygon count (32x32) for better performance
+- **Memory Management**: Proper cleanup of WebGL resources and textures
+
+#### **Browser Stability**
+
+- **Crash Prevention**: Optimized to prevent browser crashes from excessive tilting
+- **Memory Leak Prevention**: Comprehensive cleanup of event listeners and resources
+- **Error Handling**: Graceful fallback for texture loading failures
+- **Resource Limits**: Capped texture sizes and geometry complexity
+
+#### **Device Compatibility**
+
+- **Cross-Device Performance**: Works smoothly on both high-end and low-end devices
+- **Battery Optimization**: Reduced GPU usage extends battery life
 - **Touch Event Optimization**: Passive event listeners where appropriate
+- **Responsive Scaling**: Adapts performance to device capabilities
+
+#### **Update Optimization**
+
+- **Tilt Smoothing**: Weighted averaging prevents jittery movements
+- **Deadzone Implementation**: 2-degree deadzone prevents micro-movement triggers
+- **Buffer Management**: Circular buffers for smooth value interpolation
+- **Animation Throttling**: Optimized return-to-center animations
 
 ## 🚀 Getting Started
 
@@ -195,9 +219,17 @@ Popular alternatives:
 
 Customize the lenticular effect by modifying the fragment shader in `LenticularPlane.vue`:
 
-- `stripWidth`: Controls lenticular strip density
-- `lineIntensity`: Adjusts ridge visibility
-- `shimmer`: Controls light reflection effect
+- `stripWidth`: Controls lenticular strip density (0.005 for performance)
+- `lineIntensity`: Adjusts ridge visibility (0.15 for balance)
+- `shimmer`: Controls light reflection effect (0.05 for subtlety)
+
+### Performance Tuning
+
+Adjust performance settings in `LenticularPlane.vue`:
+
+- `MAX_TEXTURE_SIZE`: Maximum texture resolution (512px default)
+- `TILT_UPDATE_THROTTLE`: Update frequency in milliseconds (16ms for 60fps)
+- `TILT_SMOOTHING_SAMPLES`: Number of samples for smoothing (3 default)
 
 ### Visual Design
 
@@ -238,10 +270,10 @@ The app uses Tailwind CSS for styling. Key design tokens:
 
 ### Performance Issues
 
-- Reduce image file sizes before upload
-- Use fewer images (2-3 instead of 5)
-- Close other browser tabs
-- Try on a device with better GPU support
+- **Browser Crashes**: Fixed with performance optimizations in v1.2.0
+- **Slow Performance**: Reduced texture quality automatically applied
+- **Memory Issues**: Automatic cleanup prevents memory leaks
+- **GPU Overload**: Shader complexity reduced for stability
 
 ### Layout Issues on Mobile
 
@@ -250,6 +282,30 @@ The app uses Tailwind CSS for styling. Key design tokens:
 - Try rotating device if layout appears cramped
 
 ## 🔧 Recent Fixes & Improvements
+
+### Version 1.2.0 - Performance & Stability Update
+
+#### **Critical Performance Fixes:**
+
+1. **Browser Crash Prevention**: Comprehensive optimizations prevent crashes from excessive tilting
+2. **60fps Performance**: Throttled updates ensure smooth 60fps performance
+3. **Memory Management**: Proper cleanup of WebGL resources and textures
+4. **Shader Optimization**: Simplified fragment shader reduces GPU load
+5. **Texture Optimization**: Reduced texture sizes and improved compression
+
+#### **Stability Improvements:**
+
+- **Error Handling**: Graceful fallback for texture loading failures
+- **Resource Cleanup**: Comprehensive disposal of Three.js resources
+- **Event Optimization**: Passive event listeners and proper cleanup
+- **Cross-Device Compatibility**: Optimized for both high-end and low-end devices
+
+#### **User Experience Enhancements:**
+
+- **Smooth Interactions**: Eliminated jittery movements with tilt smoothing
+- **Battery Optimization**: Reduced GPU usage extends device battery life
+- **Responsive Controls**: Immediate feedback without performance lag
+- **Visual Quality**: Maintained effect quality while improving performance
 
 ### Version 1.1.0 - Mobile Optimization Update
 
