@@ -1,22 +1,17 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
-import {
-  Mesh,
-  PlaneGeometry,
-  ShaderMaterial,
-  TextureLoader,
-  Vector2,
-} from "three";
+import { ref, watch, onMounted } from 'vue'
+import { Mesh, PlaneGeometry, ShaderMaterial, TextureLoader, Vector2 } from 'three'
 
 const props = defineProps<{
-  leftImage: string;
-  rightImage: string;
-  tilt: number;
-}>();
+  images: string[]
+  tilt: number
+}>()
 
-const meshRef = ref<Mesh>();
-const material = ref<ShaderMaterial>();
-const imageAspectRatio = ref(1);
+const meshRef = ref<Mesh>()
+const material = ref<ShaderMaterial>()
+
+// Mobile-friendly 3:4 portrait aspect ratio for better mobile viewing
+const CARD_ASPECT_RATIO = 3 / 4
 
 // Vertex shader
 const vertexShader = `
@@ -25,218 +20,192 @@ const vertexShader = `
     vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`;
+`
 
-// Enhanced fragment shader for better lenticular effect
+// Enhanced fragment shader for multi-image lenticular effect
 const fragmentShader = `
-  uniform sampler2D leftTexture;
-  uniform sampler2D rightTexture;
+  uniform sampler2D textures[5];
   uniform float tilt;
   uniform vec2 resolution;
-  uniform float aspectRatio;
-
+  uniform int imageCount;
+  
   varying vec2 vUv;
-
+  
   void main() {
     vec2 uv = vUv;
-
-    // Calculate proper UV coordinates to fit image without stretching
+    
+    // All images are pre-cropped to 3:4 portrait ratio, so use UV directly
     vec2 imageUv = uv;
-
-    // Fit image properly based on aspect ratio without cropping
-    if (aspectRatio > 1.0) {
-      // Wide image - fit to height, letterbox horizontally
-      imageUv.x = (imageUv.x - 0.5) * aspectRatio + 0.5;
-    } else {
-      // Tall image - fit to width, letterbox vertically
-      imageUv.y = (imageUv.y - 0.5) / aspectRatio + 0.5;
-    }
-
-    // Check if we're outside the image bounds (letterbox area)
-    if (imageUv.x < 0.0 || imageUv.x > 1.0 || imageUv.y < 0.0 || imageUv.y > 1.0) {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      return;
-    }
-
-    // Create more visible lenticular strips
-    float stripWidth = 0.004; // Very fine strips for better effect
+    
+    // Create very fine lenticular strips
+    float stripWidth = 0.003; // Very fine strips
     float stripIndex = floor(uv.x / stripWidth);
-    float stripOffset = mod(uv.x, stripWidth) / stripWidth;
-
+    
     // Calculate which image to show based on tilt and strip
-    float tiltFactor = tilt * 3.0; // Amplify tilt effect
-    float viewAngle = tiltFactor + sin(stripIndex * 0.8) * 0.4; // More variation per strip
-
-    // Smooth transition between images
-    float mixFactor = (viewAngle + 1.0) * 0.5;
-    mixFactor = smoothstep(0.0, 1.0, mixFactor);
-
+    float tiltFactor = tilt * 2.0; // Amplify tilt effect
+    float viewAngle = tiltFactor + sin(stripIndex * 0.5) * 0.3;
+    
+    // Map tilt to image selection for multiple images
+    float imageSelector = (viewAngle + 1.0) * 0.5; // Normalize to 0-1
+    imageSelector = imageSelector * float(imageCount - 1); // Scale to image count
+    
+    int imageIndex1 = int(floor(imageSelector));
+    int imageIndex2 = int(ceil(imageSelector));
+    float mixFactor = fract(imageSelector);
+    
+    // Clamp indices
+    imageIndex1 = clamp(imageIndex1, 0, imageCount - 1);
+    imageIndex2 = clamp(imageIndex2, 0, imageCount - 1);
+    
     // Add parallax effect
-    vec2 leftUv = imageUv + vec2(tilt * 0.03, 0.0);
-    vec2 rightUv = imageUv - vec2(tilt * 0.03, 0.0);
-
-    // Clamp UV coordinates to prevent texture bleeding
-    leftUv = clamp(leftUv, 0.0, 1.0);
-    rightUv = clamp(rightUv, 0.0, 1.0);
-
-    vec4 leftColor = texture2D(leftTexture, leftUv);
-    vec4 rightColor = texture2D(rightTexture, rightUv);
-
-    // Create the lenticular effect
-    vec4 finalColor = mix(leftColor, rightColor, mixFactor);
-
+    vec2 parallaxOffset = vec2(tilt * 0.02, 0.0);
+    vec2 uv1 = clamp(imageUv + parallaxOffset * float(imageIndex1 - imageCount/2), 0.0, 1.0);
+    vec2 uv2 = clamp(imageUv + parallaxOffset * float(imageIndex2 - imageCount/2), 0.0, 1.0);
+    
+    // Sample textures based on image indices
+    vec4 color1, color2;
+    
+    if (imageIndex1 == 0) color1 = texture2D(textures[0], uv1);
+    else if (imageIndex1 == 1) color1 = texture2D(textures[1], uv1);
+    else if (imageIndex1 == 2) color1 = texture2D(textures[2], uv1);
+    else if (imageIndex1 == 3) color1 = texture2D(textures[3], uv1);
+    else color1 = texture2D(textures[4], uv1);
+    
+    if (imageIndex2 == 0) color2 = texture2D(textures[0], uv2);
+    else if (imageIndex2 == 1) color2 = texture2D(textures[1], uv2);
+    else if (imageIndex2 == 2) color2 = texture2D(textures[2], uv2);
+    else if (imageIndex2 == 3) color2 = texture2D(textures[3], uv2);
+    else color2 = texture2D(textures[4], uv2);
+    
+    // Blend between the two images
+    vec4 finalColor = mix(color1, color2, smoothstep(0.0, 1.0, mixFactor));
+    
     // Add very visible vertical lines to show lenticular effect
-    float linePattern = sin(uv.x * 1000.0); // High frequency lines
-    float lineIntensity = smoothstep(0.7, 1.0, abs(linePattern)) * 0.3; // More visible lines
-
-    // Add shimmer effect that's more visible
-    float shimmer = sin(uv.x * 300.0 + tilt * 15.0) * 0.15;
-
+    float linePattern = sin(uv.x * 1200.0); // High frequency lines
+    float lineIntensity = smoothstep(0.8, 1.0, abs(linePattern)) * 0.25; // More visible lines
+    
+    // Add shimmer effect
+    float shimmer = sin(uv.x * 400.0 + tilt * 20.0) * 0.1;
+    
     // Combine effects - make lines more prominent
-    finalColor.rgb += lineIntensity * vec3(0.8, 0.9, 1.0); // Slight blue tint to lines
-    finalColor.rgb += shimmer * 0.2;
-
+    finalColor.rgb += lineIntensity * vec3(0.9, 0.95, 1.0); // Slight blue tint to lines
+    finalColor.rgb += shimmer * 0.15;
+    
     // Add subtle rainbow effect on the lines
-    float rainbow = sin(uv.x * 500.0 + tilt * 10.0) * 0.1;
-    finalColor.r += rainbow * lineIntensity;
-    finalColor.g += rainbow * lineIntensity * 0.8;
-    finalColor.b += rainbow * lineIntensity * 1.2;
-
+    float rainbow = sin(uv.x * 600.0 + tilt * 15.0) * 0.08;
+    finalColor.r += rainbow * lineIntensity * 1.2;
+    finalColor.g += rainbow * lineIntensity * 0.9;
+    finalColor.b += rainbow * lineIntensity * 1.1;
+    
     // Enhance contrast slightly
-    finalColor.rgb = pow(finalColor.rgb, vec3(1.1));
-
+    finalColor.rgb = pow(finalColor.rgb, vec3(1.05));
+    
     gl_FragColor = finalColor;
   }
-`;
+`
 
-const resizeImage = (
-  imageUrl: string,
-  maxSize: number = 1024
-): Promise<string> => {
+const resizeImage = (imageUrl: string, maxSize: number = 1024): Promise<string> => {
   return new Promise((resolve) => {
-    const img = new Image();
+    const img = new Image()
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d")!;
-
-      // Calculate new dimensions
-      let { width, height } = img;
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      
+      // Calculate new dimensions maintaining 3:4 aspect ratio
+      let { width, height } = img
       if (width > height) {
         if (width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
+          height = (height * maxSize) / width
+          width = maxSize
         }
       } else {
         if (height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
+          width = (width * maxSize) / height
+          height = maxSize
         }
       }
-
-      canvas.width = width;
-      canvas.height = height;
-
+      
+      canvas.width = width
+      canvas.height = height
+      
       // Draw resized image
-      ctx.drawImage(img, 0, 0, width, height);
-
+      ctx.drawImage(img, 0, 0, width, height)
+      
       // Convert to data URL with compression
-      resolve(canvas.toDataURL("image/jpeg", 0.8));
-    };
-    img.src = imageUrl;
-  });
-};
-
-const calculateAspectRatio = (imageUrl: string): Promise<number> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      resolve(img.width / img.height);
-    };
-    img.src = imageUrl;
-  });
-};
+      resolve(canvas.toDataURL('image/jpeg', 0.8))
+    }
+    img.src = imageUrl
+  })
+}
 
 const loadTextures = async () => {
-  if (!meshRef.value) return;
+  if (!meshRef.value || props.images.length === 0) return
 
-  const loader = new TextureLoader();
-
+  const loader = new TextureLoader()
+  
   try {
-    // Calculate aspect ratio from the first image
-    const aspectRatio = await calculateAspectRatio(props.leftImage);
-    imageAspectRatio.value = aspectRatio;
-
     // Resize images for better performance
-    const [resizedLeftImage, resizedRightImage] = await Promise.all([
-      resizeImage(props.leftImage),
-      resizeImage(props.rightImage),
-    ]);
-
-    const [leftTexture, rightTexture] = await Promise.all([
-      loader.loadAsync(resizedLeftImage),
-      loader.loadAsync(resizedRightImage),
-    ]);
-
-    // Update plane geometry to match image aspect ratio but fit properly
-    const maxSize = 6;
-    let planeWidth, planeHeight;
-
-    if (aspectRatio > 1) {
-      // Wide image
-      planeWidth = maxSize;
-      planeHeight = maxSize / aspectRatio;
-    } else {
-      // Tall image
-      planeWidth = maxSize * aspectRatio;
-      planeHeight = maxSize;
+    const resizedImages = await Promise.all(
+      props.images.map(img => resizeImage(img))
+    )
+    
+    // Load textures
+    const textures = await Promise.all(
+      resizedImages.map(img => loader.loadAsync(img))
+    )
+    
+    // Pad textures array to 5 elements (shader limitation)
+    while (textures.length < 5) {
+      textures.push(textures[textures.length - 1])
     }
 
-    const geometry = new PlaneGeometry(planeWidth, planeHeight, 64, 64);
-    meshRef.value.geometry = geometry;
+    // Update plane geometry to 3:4 portrait aspect ratio (mobile-friendly)
+    const maxSize = 5
+    const planeWidth = maxSize * CARD_ASPECT_RATIO
+    const planeHeight = maxSize
+    
+    const geometry = new PlaneGeometry(planeWidth, planeHeight, 64, 64)
+    meshRef.value.geometry = geometry
 
     // Create shader material
     const shaderMaterial = new ShaderMaterial({
       uniforms: {
-        leftTexture: { value: leftTexture },
-        rightTexture: { value: rightTexture },
+        textures: { value: textures },
         tilt: { value: props.tilt },
         resolution: { value: new Vector2(1024, 768) },
-        aspectRatio: { value: aspectRatio },
+        imageCount: { value: props.images.length }
       },
       vertexShader,
-      fragmentShader,
-    });
+      fragmentShader
+    })
 
-    material.value = shaderMaterial;
-    meshRef.value.material = shaderMaterial;
+    material.value = shaderMaterial
+    meshRef.value.material = shaderMaterial
   } catch (error) {
-    console.error("Error loading textures:", error);
+    console.error('Error loading textures:', error)
   }
-};
+}
 
 // Watch for tilt changes
-watch(
-  () => props.tilt,
-  (newTilt) => {
-    if (material.value) {
-      material.value.uniforms.tilt.value = newTilt;
-    }
+watch(() => props.tilt, (newTilt) => {
+  if (material.value) {
+    material.value.uniforms.tilt.value = newTilt
   }
-);
+})
 
 // Watch for image changes
-watch([() => props.leftImage, () => props.rightImage], () => {
-  loadTextures();
-});
+watch(() => props.images, () => {
+  loadTextures()
+}, { deep: true })
 
 onMounted(() => {
-  loadTextures();
-});
+  loadTextures()
+})
 </script>
 
 <template>
   <TresMesh ref="meshRef" :position="[0, 0, 0]">
-    <TresPlaneGeometry :args="[4, 3, 32, 32]" />
+    <TresPlaneGeometry :args="[3.75, 5, 32, 32]" />
     <TresMeshBasicMaterial color="#ffffff" />
   </TresMesh>
 </template>

@@ -1,36 +1,117 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import StartScreen from './components/StartScreen.vue'
 import ImageUploader from './components/ImageUploader.vue'
+import ImageCropper from './components/ImageCropper.vue'
 import LenticularCard from './components/LenticularCard.vue'
 import DeviceOrientationHandler from './components/DeviceOrientationHandler.vue'
 
-const leftImage = ref<string | null>(null)
-const rightImage = ref<string | null>(null)
-const showCard = ref(false)
-const isGyroscopeSupported = ref(false)
+interface ImageData {
+  id: string
+  originalUrl: string
+  croppedUrl?: string
+  cropData?: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+}
+
+const currentStep = ref<'start' | 'upload' | 'crop' | 'preview'>('start')
+const images = ref<ImageData[]>([])
+const currentImageIndex = ref(0)
+const maxImages = 5
+const minImages = 2
 const tiltValue = ref(0)
 const isTransitioning = ref(false)
 const gyroscopeEnabled = ref(false)
 const gyroscopePermissionGranted = ref(false)
+const isGyroscopeSupported = ref(false)
 const orientationHandler = ref<InstanceType<typeof DeviceOrientationHandler>>()
 
-const handleImageUpload = (type: 'left' | 'right', imageData: string) => {
-  if (type === 'left') {
-    leftImage.value = imageData
-  } else {
-    rightImage.value = imageData
+const startImageSelection = () => {
+  currentStep.value = 'upload'
+  currentImageIndex.value = 0
+}
+
+const handleImageUpload = (imageData: string) => {
+  const newImage: ImageData = {
+    id: Date.now().toString(),
+    originalUrl: imageData
   }
   
-  // Show card when both images are uploaded with transition
-  if (leftImage.value && rightImage.value) {
+  if (currentImageIndex.value < images.value.length) {
+    images.value[currentImageIndex.value] = newImage
+  } else {
+    images.value.push(newImage)
+  }
+  
+  // Move to cropping step
+  currentStep.value = 'crop'
+}
+
+const handleImageCropped = (croppedImageData: string, cropData: any) => {
+  if (images.value[currentImageIndex.value]) {
+    images.value[currentImageIndex.value].croppedUrl = croppedImageData
+    images.value[currentImageIndex.value].cropData = cropData
+  }
+  
+  // Move to next image or preview
+  if (currentImageIndex.value < maxImages - 1) {
+    currentImageIndex.value++
+    currentStep.value = 'upload'
+  } else {
+    showPreview()
+  }
+}
+
+const skipCropping = () => {
+  if (images.value[currentImageIndex.value]) {
+    images.value[currentImageIndex.value].croppedUrl = images.value[currentImageIndex.value].originalUrl
+  }
+  
+  if (currentImageIndex.value < maxImages - 1) {
+    currentImageIndex.value++
+    currentStep.value = 'upload'
+  } else {
+    showPreview()
+  }
+}
+
+const finishSelection = () => {
+  if (images.value.length >= minImages) {
+    showPreview()
+  }
+}
+
+const showPreview = () => {
+  if (images.value.length >= minImages) {
     isTransitioning.value = true
     setTimeout(() => {
-      showCard.value = true
+      currentStep.value = 'preview'
       setTimeout(() => {
         isTransitioning.value = false
       }, 100)
     }, 300)
   }
+}
+
+const goBackToUpload = () => {
+  currentStep.value = 'upload'
+}
+
+const resetApp = () => {
+  isTransitioning.value = true
+  setTimeout(() => {
+    currentStep.value = 'start'
+    images.value = []
+    currentImageIndex.value = 0
+    tiltValue.value = 0
+    setTimeout(() => {
+      isTransitioning.value = false
+    }, 100)
+  }, 300)
 }
 
 const handleTiltChange = (value: number) => {
@@ -66,21 +147,7 @@ const toggleMode = () => {
   }
 }
 
-const resetApp = () => {
-  isTransitioning.value = true
-  setTimeout(() => {
-    leftImage.value = null
-    rightImage.value = null
-    showCard.value = false
-    tiltValue.value = 0
-    setTimeout(() => {
-      isTransitioning.value = false
-    }, 100)
-  }, 300)
-}
-
 onMounted(() => {
-  // Check for device orientation support
   if (typeof DeviceOrientationEvent !== 'undefined') {
     isGyroscopeSupported.value = true
   }
@@ -96,89 +163,125 @@ onMounted(() => {
     >
       <div class="text-white text-center">
         <div class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-lg">Preparing your lenticular card...</p>
+        <p class="text-lg">
+          {{ currentStep === 'preview' ? 'Preparing your lenticular card...' : 'Loading...' }}
+        </p>
       </div>
     </div>
 
+    <!-- Start Screen -->
+    <StartScreen 
+      v-if="currentStep === 'start'"
+      :is-gyroscope-supported="isGyroscopeSupported"
+      :gyroscope-enabled="gyroscopeEnabled"
+      :gyroscope-permission-granted="gyroscopePermissionGranted"
+      @start="startImageSelection"
+      @toggle-mode="toggleMode"
+      @enable-gyroscope="enableGyroscope"
+    />
+
     <!-- Upload Interface -->
     <div 
-      v-if="!showCard" 
-      class="flex-1 flex flex-col transition-all duration-500 ease-out"
+      v-if="currentStep === 'upload'" 
+      class="flex-1 flex flex-col transition-all duration-500 ease-out overflow-hidden"
       :class="{ 'opacity-0 scale-95': isTransitioning }"
     >
-      <!-- Header -->
-      <header class="relative z-10 px-4 py-6 flex-shrink-0">
-        <div class="max-w-4xl mx-auto text-center">
-          <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
-            Lenticular Effect Generator
-          </h1>
-          <p class="text-slate-300 text-sm md:text-base lg:text-lg">
-            Create stunning tilt-responsive image cards
+      <header class="relative z-10 px-4 py-4 flex-shrink-0">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="text-xl md:text-2xl font-bold text-white">
+              Select Image {{ currentImageIndex + 1 }}
+            </h1>
+            <div class="text-sm text-slate-300">
+              {{ currentImageIndex + 1 }} of {{ maxImages }} max
+            </div>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="w-full bg-white/20 rounded-full h-2 mb-4">
+            <div 
+              class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${((currentImageIndex + 1) / maxImages) * 100}%` }"
+            ></div>
+          </div>
+          
+          <p class="text-slate-300 text-sm">
+            Choose {{ currentImageIndex === 0 ? 'your first' : currentImageIndex === 1 ? 'your second' : `image ${currentImageIndex + 1}` }} for the lenticular effect
           </p>
         </div>
       </header>
 
-      <!-- Upload Area -->
-      <main class="flex-1 px-4 pb-6 flex items-center justify-center min-h-0">
-        <div class="w-full max-w-4xl">
+      <main class="flex-1 px-4 flex items-center justify-center min-h-0 overflow-y-auto">
+        <div class="w-full max-w-2xl py-4">
           <ImageUploader @image-uploaded="handleImageUpload" />
-          
-          <!-- Mode Selection -->
-          <div v-if="isGyroscopeSupported" class="mt-6 flex justify-center">
-            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <h3 class="text-white text-sm font-medium mb-3 text-center">Control Mode</h3>
-              <div class="flex items-center space-x-4">
-                <button
-                  @click="toggleMode"
-                  class="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300"
-                  :class="gyroscopeEnabled && gyroscopePermissionGranted ? 'bg-blue-600 text-white' : 'bg-white/20 text-slate-300 hover:bg-white/30'"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                  </svg>
-                  <span class="text-sm">Auto (Gyroscope)</span>
-                </button>
-                <button
-                  @click="gyroscopeEnabled = false"
-                  class="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300"
-                  :class="!gyroscopeEnabled ? 'bg-blue-600 text-white' : 'bg-white/20 text-slate-300 hover:bg-white/30'"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
-                  </svg>
-                  <span class="text-sm">Manual (Drag)</span>
-                </button>
-              </div>
-              <p class="text-slate-400 text-xs mt-2 text-center">
-                {{ gyroscopeEnabled && gyroscopePermissionGranted ? 'Tilt your device to see the effect' : 'Drag or use slider to control the effect' }}
-              </p>
-            </div>
-          </div>
-          
-          <!-- Instructions -->
-          <div class="mt-6 text-center">
-            <div class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-              <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              <span class="text-white text-sm">
-                Upload both images to generate your lenticular card
-              </span>
-            </div>
-          </div>
         </div>
+      </main>
+
+      <!-- Fixed Bottom Bar -->
+      <div class="flex-shrink-0 px-4 py-4 bg-black/20 backdrop-blur-sm border-t border-white/10">
+        <div class="max-w-4xl mx-auto flex justify-center space-x-4">
+          <button
+            v-if="currentImageIndex > 0"
+            @click="currentImageIndex--; currentStep = 'upload'"
+            class="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg transition-all duration-300"
+          >
+            Previous
+          </button>
+          
+          <button
+            v-if="images.length >= minImages && currentImageIndex >= minImages - 1"
+            @click="finishSelection"
+            class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-300"
+          >
+            Finish ({{ images.length }} images)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crop Interface -->
+    <div 
+      v-if="currentStep === 'crop'" 
+      class="flex-1 flex flex-col transition-all duration-500 ease-out overflow-hidden"
+      :class="{ 'opacity-0 scale-95': isTransitioning }"
+    >
+      <header class="relative z-10 px-4 py-4 flex-shrink-0">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-center justify-between mb-2">
+            <h1 class="text-xl md:text-2xl font-bold text-white">
+              Crop Image {{ currentImageIndex + 1 }}
+            </h1>
+            <div class="text-sm text-slate-300">
+              {{ currentImageIndex + 1 }} of {{ images.length }}
+            </div>
+          </div>
+          <p class="text-slate-300 text-sm">
+            Adjust the crop area to fit your desired composition
+          </p>
+        </div>
+      </header>
+
+      <main class="flex-1 min-h-0 overflow-hidden">
+        <ImageCropper 
+          v-if="images[currentImageIndex]"
+          :image-url="images[currentImageIndex].originalUrl"
+          @cropped="handleImageCropped"
+          @skip="skipCropping"
+          @back="goBackToUpload"
+        />
       </main>
     </div>
 
-    <!-- Lenticular Card Display -->
+    <!-- Preview Interface -->
     <div 
-      v-if="showCard" 
-      class="h-dvh flex flex-col transition-all duration-500 ease-out"
+      v-if="currentStep === 'preview'" 
+      class="h-dvh flex flex-col transition-all duration-500 ease-out overflow-hidden"
       :class="{ 'opacity-0 scale-105': isTransitioning }"
     >
-      <!-- Compact Header -->
       <header class="relative z-20 px-4 py-3 flex-shrink-0">
         <div class="flex items-center justify-between max-w-6xl mx-auto">
           <h1 class="text-lg md:text-xl font-bold text-white">
-            Lenticular Effect
+            Lenticular Effect ({{ images.length }} images)
           </h1>
           <button
             @click="resetApp"
@@ -192,11 +295,9 @@ onMounted(() => {
         </div>
       </header>
 
-      <!-- Full-Screen Card -->
-      <main class="flex-1 px-4 pb-4 min-h-0">
+      <main class="flex-1 px-4 pb-4 min-h-0 overflow-hidden">
         <LenticularCard 
-          :left-image="leftImage!"
-          :right-image="rightImage!"
+          :images="images.map(img => img.croppedUrl || img.originalUrl)"
           :tilt-value="tiltValue"
           :is-gyroscope-supported="isGyroscopeSupported"
           :gyroscope-enabled="gyroscopeEnabled"
