@@ -40,9 +40,38 @@ const enableManualMode = () => {
 
     <!-- Main Content -->
     <main class="flex-1 px-4 pb-8 flex items-center justify-center min-h-0">
-      <div class="w-full max-w-md text-center">
+      <div class="w-full max-w-md text-center space-y-6">
+        <!-- Start Button -->
+        <div>
+          <button
+            @click="$emit('start')"
+            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            <div class="flex items-center justify-center space-x-3">
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="text-lg">Start Creating</span>
+            </div>
+          </button>
+
+          <p class="text-slate-400 text-sm mt-4">
+            Upload 2-5 images to create your lenticular effect
+          </p>
+        </div>
+
         <!-- Mode Selection -->
-        <div v-if="isGyroscopeSupported" class="mb-8">
+        <div v-if="isGyroscopeSupported">
           <div class="bg-white/10 backdrop-blur-sm rounded-lg p-6">
             <h3 class="text-white text-lg font-semibold mb-4">Control Mode</h3>
             <div class="space-y-3">
@@ -127,33 +156,6 @@ const enableManualMode = () => {
             </div>
           </div>
         </div>
-
-        <!-- Start Button -->
-        <button
-          @click="$emit('start')"
-          class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-        >
-          <div class="flex items-center justify-center space-x-3">
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-            <span class="text-lg">Start Creating</span>
-          </div>
-        </button>
-
-        <p class="text-slate-400 text-sm mt-4">
-          Upload 2-5 images to create your lenticular effect
-        </p>
       </div>
     </main>
   </div>
