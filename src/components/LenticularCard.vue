@@ -3,6 +3,7 @@ import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { TresCanvas } from '@tresjs/core'
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
 import LenticularPlane from './LenticularPlane.vue'
+import DeviceOrientationHandler from './DeviceOrientationHandler.vue'
 
 const props = defineProps<{
   leftImage: string
@@ -12,15 +13,19 @@ const props = defineProps<{
 }>()
 
 const canvasContainer = ref<HTMLElement>()
+const orientationHandler = ref<InstanceType<typeof DeviceOrientationHandler>>()
 const manualTilt = ref(0)
 const isDragging = ref(false)
 const startX = ref(0)
 const currentTilt = ref(0)
 const isTouch = ref(false)
+const gyroscopeEnabled = ref(false)
+const gyroscopePermissionGranted = ref(false)
+const showGyroscopeButton = ref(false)
 
 // Watch for tilt value changes from gyroscope or manual input
 watch(() => props.tiltValue, (newValue) => {
-  if (props.isGyroscopeSupported && !isDragging.value) {
+  if (gyroscopeEnabled.value && gyroscopePermissionGranted.value && !isDragging.value) {
     currentTilt.value = newValue
   }
 })
@@ -36,17 +41,17 @@ const handleMove = (clientX: number) => {
   if (!isDragging.value) return
   
   const deltaX = clientX - startX.value
-  const sensitivity = props.isGyroscopeSupported ? 0.5 : 1
+  const sensitivity = gyroscopeEnabled.value && gyroscopePermissionGranted.value ? 0.5 : 1
   manualTilt.value = Math.max(-1, Math.min(1, deltaX * sensitivity / 200))
   
-  if (!props.isGyroscopeSupported || !props.tiltValue) {
+  if (!gyroscopeEnabled.value || !gyroscopePermissionGranted.value || !props.tiltValue) {
     currentTilt.value = manualTilt.value
   }
 }
 
 const handleEnd = () => {
   isDragging.value = false
-  if (!props.isGyroscopeSupported) {
+  if (!gyroscopeEnabled.value || !gyroscopePermissionGranted.value) {
     // Smooth return to center for manual mode
     const smoothReturn = () => {
       manualTilt.value *= 0.9
@@ -89,6 +94,35 @@ const handleTouchMove = (event: TouchEvent) => {
 const handleTouchEnd = (event: TouchEvent) => {
   event.preventDefault()
   handleEnd()
+}
+
+const handleGyroscopeSupport = (supported: boolean) => {
+  showGyroscopeButton.value = supported
+}
+
+const handlePermissionGranted = (granted: boolean) => {
+  gyroscopePermissionGranted.value = granted
+  if (granted) {
+    gyroscopeEnabled.value = true
+  }
+}
+
+const enableGyroscope = () => {
+  if (orientationHandler.value) {
+    orientationHandler.value.enableGyroscope()
+  }
+}
+
+const toggleGyroscope = () => {
+  if (gyroscopeEnabled.value && gyroscopePermissionGranted.value) {
+    gyroscopeEnabled.value = false
+  } else if (orientationHandler.value?.isSupported()) {
+    if (orientationHandler.value.isPermissionGranted()) {
+      gyroscopeEnabled.value = true
+    } else {
+      orientationHandler.value.enableGyroscope()
+    }
+  }
 }
 
 onMounted(() => {
@@ -141,15 +175,27 @@ onUnmounted(() => {
       
       <!-- Overlay Status and Controls -->
       <div class="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none">
-        <!-- Status Indicator -->
-        <div class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2">
-          <div 
-            class="w-2 h-2 rounded-full"
-            :class="isGyroscopeSupported && Math.abs(tiltValue) > 0.1 ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'"
-          ></div>
-          <span class="text-white text-xs md:text-sm">
-            {{ isGyroscopeSupported && Math.abs(tiltValue) > 0.1 ? 'Gyroscope' : 'Manual' }}
-          </span>
+        <!-- Status and Gyroscope Toggle -->
+        <div class="flex items-center space-x-2">
+          <!-- Status Indicator -->
+          <div class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2">
+            <div 
+              class="w-2 h-2 rounded-full"
+              :class="gyroscopeEnabled && gyroscopePermissionGranted && Math.abs(currentTilt) > 0.1 ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'"
+            ></div>
+            <span class="text-white text-xs md:text-sm">
+              {{ gyroscopeEnabled && gyroscopePermissionGranted && Math.abs(currentTilt) > 0.1 ? 'Auto' : 'Manual' }}
+            </span>
+          </div>
+
+          <!-- Gyroscope Toggle Button -->
+          <button
+            v-if="showGyroscopeButton"
+            @click="toggleGyroscope"
+            class="bg-black/40 backdrop-blur-sm rounded-full px-3 py-2 text-white text-xs md:text-sm hover:bg-black/60 transition-colors pointer-events-auto"
+          >
+            {{ gyroscopeEnabled && gyroscopePermissionGranted ? 'Manual' : 'Auto' }}
+          </button>
         </div>
 
         <!-- Effect Information -->
@@ -165,9 +211,9 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Instructions Overlay (only when not actively using) -->
+      <!-- Instructions Overlay -->
       <div 
-        v-if="(!isGyroscopeSupported || Math.abs(tiltValue) < 0.1) && !isDragging"
+        v-if="(!gyroscopeEnabled || !gyroscopePermissionGranted || Math.abs(currentTilt) < 0.1) && !isDragging"
         class="absolute bottom-4 left-4 right-4 flex items-center justify-center"
       >
         <div class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 text-center text-white pointer-events-none">
@@ -176,15 +222,15 @@ onUnmounted(() => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
             </svg>
             <span class="text-xs md:text-sm">
-              {{ isGyroscopeSupported ? 'Tilt device or drag to see effect' : 'Drag to see lenticular effect' }}
+              {{ showGyroscopeButton ? 'Drag to see effect or enable Auto mode' : 'Drag to see lenticular effect' }}
             </span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Manual Controls (for desktop) -->
-    <div v-if="!isGyroscopeSupported" class="mt-4 px-4">
+    <!-- Manual Controls (for desktop or when gyroscope is disabled) -->
+    <div v-if="!gyroscopeEnabled || !gyroscopePermissionGranted" class="mt-4 px-4">
       <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
         <div class="text-center mb-2">
           <span class="text-white text-sm">Manual Control</span>
@@ -204,6 +250,14 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Device Orientation Handler -->
+    <DeviceOrientationHandler 
+      ref="orientationHandler"
+      @tilt-change="(value) => gyroscopeEnabled && gyroscopePermissionGranted && (currentTilt = value)"
+      @gyroscope-support="handleGyroscopeSupport"
+      @permission-granted="handlePermissionGranted"
+    />
   </div>
 </template>
 

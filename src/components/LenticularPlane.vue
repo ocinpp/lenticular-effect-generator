@@ -21,7 +21,7 @@ const vertexShader = `
   }
 `
 
-// Fragment shader for lenticular effect
+// Enhanced fragment shader for better lenticular effect
 const fragmentShader = `
   uniform sampler2D leftTexture;
   uniform sampler2D rightTexture;
@@ -34,30 +34,43 @@ const fragmentShader = `
   void main() {
     vec2 uv = vUv;
     
-    // Maintain aspect ratio
-    vec2 aspectUv = uv;
+    // Calculate proper UV coordinates to fit image without stretching
+    vec2 imageUv = uv;
+    
+    // Fit image properly based on aspect ratio
     if (aspectRatio > 1.0) {
-      aspectUv.y = (aspectUv.y - 0.5) * aspectRatio + 0.5;
+      // Wide image - fit height, center horizontally
+      float scale = 1.0 / aspectRatio;
+      imageUv.x = (imageUv.x - 0.5) * aspectRatio + 0.5;
+      if (imageUv.x < 0.0 || imageUv.x > 1.0) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+      }
     } else {
-      aspectUv.x = (aspectUv.x - 0.5) / aspectRatio + 0.5;
+      // Tall image - fit width, center vertically
+      imageUv.y = (imageUv.y - 0.5) / aspectRatio + 0.5;
+      if (imageUv.y < 0.0 || imageUv.y > 1.0) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+      }
     }
     
-    // Create lenticular strips
-    float stripWidth = 0.015; // Finer strips for better effect
+    // Create more visible lenticular strips
+    float stripWidth = 0.008; // Even finer strips for better effect
     float stripIndex = floor(uv.x / stripWidth);
     float stripOffset = mod(uv.x, stripWidth) / stripWidth;
     
     // Calculate which image to show based on tilt and strip
-    float tiltFactor = tilt * 1.5; // Amplify tilt effect
-    float viewAngle = tiltFactor + sin(stripIndex * 0.3) * 0.2; // Add some variation per strip
+    float tiltFactor = tilt * 2.0; // Amplify tilt effect more
+    float viewAngle = tiltFactor + sin(stripIndex * 0.5) * 0.3; // More variation per strip
     
     // Smooth transition between images
     float mixFactor = (viewAngle + 1.0) * 0.5;
-    mixFactor = smoothstep(0.0, 1.0, mixFactor);
+    mixFactor = smoothstep(0.1, 0.9, mixFactor);
     
-    // Add subtle parallax effect
-    vec2 leftUv = aspectUv + vec2(tilt * 0.015, 0.0);
-    vec2 rightUv = aspectUv - vec2(tilt * 0.015, 0.0);
+    // Add more pronounced parallax effect
+    vec2 leftUv = imageUv + vec2(tilt * 0.02, 0.0);
+    vec2 rightUv = imageUv - vec2(tilt * 0.02, 0.0);
     
     // Clamp UV coordinates to prevent texture bleeding
     leftUv = clamp(leftUv, 0.0, 1.0);
@@ -66,19 +79,60 @@ const fragmentShader = `
     vec4 leftColor = texture2D(leftTexture, leftUv);
     vec4 rightColor = texture2D(rightTexture, rightUv);
     
-    // Create the lenticular effect
+    // Create the lenticular effect with more visible strips
     vec4 finalColor = mix(leftColor, rightColor, mixFactor);
     
-    // Add subtle shimmer effect based on strip position
-    float shimmer = sin(uv.x * 120.0 + tilt * 8.0) * 0.05;
-    finalColor.rgb += shimmer * 0.1;
+    // Add more visible vertical lines to show lenticular effect
+    float lineIntensity = sin(uv.x * 800.0) * 0.15; // More visible lines
+    float linePattern = smoothstep(0.8, 1.0, abs(sin(uv.x * 400.0))); // Sharp lines
+    
+    // Add shimmer effect that's more visible
+    float shimmer = sin(uv.x * 200.0 + tilt * 10.0) * 0.1;
+    
+    // Combine effects
+    finalColor.rgb += (lineIntensity + shimmer) * 0.2;
+    finalColor.rgb += linePattern * 0.05; // Subtle line overlay
     
     // Enhance contrast slightly
-    finalColor.rgb = pow(finalColor.rgb, vec3(1.1));
+    finalColor.rgb = pow(finalColor.rgb, vec3(1.05));
     
     gl_FragColor = finalColor;
   }
 `
+
+const resizeImage = (imageUrl: string, maxSize: number = 1024): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      
+      // Calculate new dimensions
+      let { width, height } = img
+      if (width > height) {
+        if (width > maxSize) {
+          height = (height * maxSize) / width
+          width = maxSize
+        }
+      } else {
+        if (height > maxSize) {
+          width = (width * maxSize) / height
+          height = maxSize
+        }
+      }
+      
+      canvas.width = width
+      canvas.height = height
+      
+      // Draw resized image
+      ctx.drawImage(img, 0, 0, width, height)
+      
+      // Convert to data URL with compression
+      resolve(canvas.toDataURL('image/jpeg', 0.8))
+    }
+    img.src = imageUrl
+  })
+}
 
 const calculateAspectRatio = (imageUrl: string): Promise<number> => {
   return new Promise((resolve) => {
@@ -100,14 +154,30 @@ const loadTextures = async () => {
     const aspectRatio = await calculateAspectRatio(props.leftImage)
     imageAspectRatio.value = aspectRatio
     
+    // Resize images for better performance
+    const [resizedLeftImage, resizedRightImage] = await Promise.all([
+      resizeImage(props.leftImage),
+      resizeImage(props.rightImage)
+    ])
+    
     const [leftTexture, rightTexture] = await Promise.all([
-      loader.loadAsync(props.leftImage),
-      loader.loadAsync(props.rightImage)
+      loader.loadAsync(resizedLeftImage),
+      loader.loadAsync(resizedRightImage)
     ])
 
-    // Update plane geometry to match image aspect ratio
-    const planeWidth = aspectRatio > 1 ? 6 : 6 / aspectRatio
-    const planeHeight = aspectRatio > 1 ? 6 / aspectRatio : 6
+    // Update plane geometry to match image aspect ratio but fit properly
+    const maxSize = 6
+    let planeWidth, planeHeight
+    
+    if (aspectRatio > 1) {
+      // Wide image
+      planeWidth = maxSize
+      planeHeight = maxSize / aspectRatio
+    } else {
+      // Tall image
+      planeWidth = maxSize * aspectRatio
+      planeHeight = maxSize
+    }
     
     const geometry = new PlaneGeometry(planeWidth, planeHeight, 64, 64)
     meshRef.value.geometry = geometry
