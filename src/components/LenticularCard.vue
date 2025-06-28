@@ -1,191 +1,273 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue'
-import { TresCanvas } from '@tresjs/core'
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from 'three'
-import LenticularPlane from './LenticularPlane.vue'
+import { ref, onMounted, watch, onUnmounted } from "vue";
+import { TresCanvas } from "@tresjs/core";
+import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from "three";
+import LenticularPlane from "./LenticularPlane.vue";
 
 const props = defineProps<{
-  images: string[]
-  tiltValue: number
-  isGyroscopeSupported: boolean
-  gyroscopeEnabled: boolean
-  gyroscopePermissionGranted: boolean
-}>()
+  images: string[];
+  tiltValue: number;
+  isGyroscopeSupported: boolean;
+  gyroscopeEnabled: boolean;
+  gyroscopePermissionGranted: boolean;
+}>();
 
-const canvasContainer = ref<HTMLElement>()
-const manualTilt = ref(0)
-const isDragging = ref(false)
-const startX = ref(0)
-const currentTilt = ref(0)
+const canvasContainer = ref<HTMLElement>();
+const manualTilt = ref(0);
+const isDragging = ref(false);
+const startX = ref(0);
+const currentTilt = ref(0);
+
+// Performance optimization for manual controls
+const lastManualUpdate = ref(0);
+const MANUAL_UPDATE_THROTTLE = 16; // ~60fps max
 
 // Watch for tilt value changes from gyroscope or manual input
-watch(() => props.tiltValue, (newValue) => {
-  if (props.gyroscopeEnabled && props.gyroscopePermissionGranted && !isDragging.value) {
-    currentTilt.value = newValue
+watch(
+  () => props.tiltValue,
+  (newValue) => {
+    if (
+      props.gyroscopeEnabled &&
+      props.gyroscopePermissionGranted &&
+      !isDragging.value
+    ) {
+      currentTilt.value = newValue;
+    }
   }
-})
+);
+
+// Throttled manual tilt update
+const updateManualTilt = (newTilt: number) => {
+  const now = Date.now();
+  if (now - lastManualUpdate.value < MANUAL_UPDATE_THROTTLE) {
+    return;
+  }
+  lastManualUpdate.value = now;
+
+  manualTilt.value = newTilt;
+  if (
+    !props.gyroscopeEnabled ||
+    !props.gyroscopePermissionGranted ||
+    !props.tiltValue
+  ) {
+    currentTilt.value = manualTilt.value;
+  }
+};
 
 // Manual drag/swipe handlers
 const handleStart = (clientX: number) => {
-  isDragging.value = true
-  startX.value = clientX
-}
+  isDragging.value = true;
+  startX.value = clientX;
+};
 
 const handleMove = (clientX: number) => {
-  if (!isDragging.value) return
-  
-  const deltaX = clientX - startX.value
-  const sensitivity = props.gyroscopeEnabled && props.gyroscopePermissionGranted ? 0.5 : 1
-  manualTilt.value = Math.max(-1, Math.min(1, deltaX * sensitivity / 200))
-  
-  if (!props.gyroscopeEnabled || !props.gyroscopePermissionGranted || !props.tiltValue) {
-    currentTilt.value = manualTilt.value
-  }
-}
+  if (!isDragging.value) return;
+
+  const deltaX = clientX - startX.value;
+  const sensitivity =
+    props.gyroscopeEnabled && props.gyroscopePermissionGranted ? 0.5 : 1;
+  const newTilt = Math.max(-1, Math.min(1, (deltaX * sensitivity) / 200));
+
+  updateManualTilt(newTilt);
+};
 
 const handleEnd = () => {
-  isDragging.value = false
+  isDragging.value = false;
   if (!props.gyroscopeEnabled || !props.gyroscopePermissionGranted) {
-    // Smooth return to center for manual mode
+    // Smooth return to center for manual mode with reduced animation frequency
+    let animationId: number;
     const smoothReturn = () => {
-      manualTilt.value *= 0.9
-      currentTilt.value = manualTilt.value
+      manualTilt.value *= 0.92; // Slightly faster decay
+      updateManualTilt(manualTilt.value);
+
       if (Math.abs(manualTilt.value) > 0.01) {
-        requestAnimationFrame(smoothReturn)
+        animationId = requestAnimationFrame(smoothReturn);
       } else {
-        manualTilt.value = 0
-        currentTilt.value = 0
+        manualTilt.value = 0;
+        currentTilt.value = 0;
+        cancelAnimationFrame(animationId);
       }
-    }
-    smoothReturn()
+    };
+    smoothReturn();
   }
-}
+};
 
 // Mouse events
 const handleMouseDown = (event: MouseEvent) => {
-  event.preventDefault()
-  handleStart(event.clientX)
-}
+  event.preventDefault();
+  handleStart(event.clientX);
+};
 
 const handleMouseMove = (event: MouseEvent) => {
-  handleMove(event.clientX)
-}
+  handleMove(event.clientX);
+};
 
 const handleMouseUp = () => {
-  handleEnd()
-}
+  handleEnd();
+};
 
 // Touch events
 const handleTouchStart = (event: TouchEvent) => {
-  event.preventDefault()
-  handleStart(event.touches[0].clientX)
-}
+  event.preventDefault();
+  handleStart(event.touches[0].clientX);
+};
 
 const handleTouchMove = (event: TouchEvent) => {
-  event.preventDefault()
-  handleMove(event.touches[0].clientX)
-}
+  event.preventDefault();
+  handleMove(event.touches[0].clientX);
+};
 
 const handleTouchEnd = (event: TouchEvent) => {
-  event.preventDefault()
-  handleEnd()
-}
+  event.preventDefault();
+  handleEnd();
+};
 
 onMounted(() => {
   if (canvasContainer.value) {
     // Add mouse event listeners
-    canvasContainer.value.addEventListener('mousedown', handleMouseDown)
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-    
+    canvasContainer.value.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousemove", handleMouseMove, { passive: false });
+    document.addEventListener("mouseup", handleMouseUp, { passive: true });
+
     // Add touch event listeners with proper passive handling
-    canvasContainer.value.addEventListener('touchstart', handleTouchStart, { passive: false })
-    canvasContainer.value.addEventListener('touchmove', handleTouchMove, { passive: false })
-    canvasContainer.value.addEventListener('touchend', handleTouchEnd, { passive: false })
+    canvasContainer.value.addEventListener("touchstart", handleTouchStart, {
+      passive: false,
+    });
+    canvasContainer.value.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+    canvasContainer.value.addEventListener("touchend", handleTouchEnd, {
+      passive: false,
+    });
   }
-})
+});
 
 onUnmounted(() => {
   // Clean up event listeners
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
-  
+  document.removeEventListener("mousemove", handleMouseMove);
+  document.removeEventListener("mouseup", handleMouseUp);
+
   if (canvasContainer.value) {
-    canvasContainer.value.removeEventListener('touchstart', handleTouchStart)
-    canvasContainer.value.removeEventListener('touchmove', handleTouchMove)
-    canvasContainer.value.removeEventListener('touchend', handleTouchEnd)
+    canvasContainer.value.removeEventListener("touchstart", handleTouchStart);
+    canvasContainer.value.removeEventListener("touchmove", handleTouchMove);
+    canvasContainer.value.removeEventListener("touchend", handleTouchEnd);
   }
-})
+});
 </script>
 
 <template>
   <div class="h-full flex flex-col">
     <!-- 3D Canvas - Takes most of the screen -->
-    <div 
+    <div
       ref="canvasContainer"
       class="flex-1 relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm touch-none"
       :class="{ 'cursor-grabbing': isDragging }"
     >
       <TresCanvas
         clear-color="#000000"
-        :shadows="true"
+        :shadows="false"
         :shadow-map-type="BasicShadowMap"
         :color-space="SRGBColorSpace"
         :tone-mapping="NoToneMapping"
+        :antialias="false"
         class="w-full h-full"
       >
         <TresPerspectiveCamera :position="[0, 0, 5]" />
-        <TresAmbientLight :intensity="0.5" />
-        <TresDirectionalLight :position="[10, 10, 5]" :intensity="1" cast-shadow />
-        
-        <LenticularPlane 
-          :images="images"
-          :tilt="currentTilt"
-        />
+        <TresAmbientLight :intensity="0.6" />
+        <TresDirectionalLight :position="[10, 10, 5]" :intensity="0.8" />
+
+        <LenticularPlane :images="images" :tilt="currentTilt" />
       </TresCanvas>
-      
+
       <!-- Overlay Status and Controls -->
-      <div class="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none">
+      <div
+        class="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none"
+      >
         <!-- Status Indicator -->
-        <div class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2">
-          <div 
+        <div
+          class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2"
+        >
+          <div
             class="w-2 h-2 rounded-full"
-            :class="gyroscopeEnabled && gyroscopePermissionGranted && Math.abs(currentTilt) > 0.1 ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'"
+            :class="
+              gyroscopeEnabled &&
+              gyroscopePermissionGranted &&
+              Math.abs(currentTilt) > 0.1
+                ? 'bg-green-400 animate-pulse'
+                : 'bg-yellow-400'
+            "
           ></div>
           <span class="text-white text-xs md:text-sm">
-            {{ gyroscopeEnabled && gyroscopePermissionGranted ? 'Auto Mode' : 'Manual Mode' }}
+            {{
+              gyroscopeEnabled && gyroscopePermissionGranted
+                ? "Auto Mode"
+                : "Manual Mode"
+            }}
           </span>
         </div>
 
         <!-- Effect Information -->
         <div class="flex space-x-2">
-          <div class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center">
-            <div class="text-lg md:text-xl font-bold text-white">{{ images.length }}</div>
+          <div
+            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+          >
+            <div class="text-lg md:text-xl font-bold text-white">
+              {{ images.length }}
+            </div>
             <div class="text-xs text-slate-300">Images</div>
           </div>
-          <div class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center">
-            <div class="text-lg md:text-xl font-bold text-white">{{ Math.abs(currentTilt * 100).toFixed(0) }}%</div>
+          <div
+            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+          >
+            <div class="text-lg md:text-xl font-bold text-white">
+              {{ Math.abs(currentTilt * 100).toFixed(0) }}%
+            </div>
             <div class="text-xs text-slate-300">Strength</div>
           </div>
-          <div class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center">
-            <div class="text-lg md:text-xl font-bold text-white">{{ currentTilt > 0 ? 'R' : currentTilt < 0 ? 'L' : 'C' }}</div>
+          <div
+            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+          >
+            <div class="text-lg md:text-xl font-bold text-white">
+              {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
+            </div>
             <div class="text-xs text-slate-300">View</div>
           </div>
         </div>
       </div>
 
       <!-- Instructions Overlay -->
-      <div 
-        v-if="(!gyroscopeEnabled || !gyroscopePermissionGranted || Math.abs(currentTilt) < 0.1) && !isDragging"
+      <div
+        v-if="
+          (!gyroscopeEnabled ||
+            !gyroscopePermissionGranted ||
+            Math.abs(currentTilt) < 0.1) &&
+          !isDragging
+        "
         class="absolute bottom-4 left-4 right-4 flex items-center justify-center"
       >
-        <div class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 text-center text-white pointer-events-none">
+        <div
+          class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 text-center text-white pointer-events-none"
+        >
           <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16l-4-4m0 0l4-4m-4 4h18"
+              ></path>
             </svg>
             <span class="text-xs md:text-sm">
-              {{ gyroscopeEnabled && gyroscopePermissionGranted ? 'Tilt your device to see the effect' : 'Drag horizontally to see lenticular effect' }}
+              {{
+                gyroscopeEnabled && gyroscopePermissionGranted
+                  ? "Tilt your device to see the effect"
+                  : "Drag horizontally to see lenticular effect"
+              }}
             </span>
           </div>
         </div>
@@ -193,7 +275,10 @@ onUnmounted(() => {
     </div>
 
     <!-- Manual Controls (for desktop or when gyroscope is disabled) -->
-    <div v-if="!gyroscopeEnabled || !gyroscopePermissionGranted" class="mt-4 px-4">
+    <div
+      v-if="!gyroscopeEnabled || !gyroscopePermissionGranted"
+      class="mt-4 px-4"
+    >
       <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
         <div class="text-center mb-2">
           <span class="text-white text-sm">Manual Control</span>
@@ -202,7 +287,7 @@ onUnmounted(() => {
           type="range"
           min="-1"
           max="1"
-          step="0.01"
+          step="0.02"
           v-model="currentTilt"
           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
         />

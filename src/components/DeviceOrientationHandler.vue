@@ -11,13 +11,59 @@ const isSupported = ref(false);
 const isPermissionGranted = ref(false);
 const showPermissionModal = ref(false);
 const permissionDenied = ref(false);
+// const beta = ref(0); // Front-to-back tilt
 const gamma = ref(0); // Left-to-right tilt
 
+// Performance optimization for orientation events
+const lastOrientationUpdate = ref(0);
+const ORIENTATION_THROTTLE = 16; // ~60fps max
+const orientationBuffer = ref<number[]>([]);
+const SMOOTHING_SAMPLES = 5;
+
+// Smooth orientation values to prevent jittery updates
+const smoothOrientation = (newValue: number): number => {
+  orientationBuffer.value.push(newValue);
+  if (orientationBuffer.value.length > SMOOTHING_SAMPLES) {
+    orientationBuffer.value.shift();
+  }
+
+  // Calculate weighted average (more recent values have higher weight)
+  let weightedSum = 0;
+  let totalWeight = 0;
+
+  orientationBuffer.value.forEach((value, index) => {
+    const weight = index + 1; // More recent values get higher weight
+    weightedSum += value * weight;
+    totalWeight += weight;
+  });
+
+  return weightedSum / totalWeight;
+};
+
 const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+  // Throttle orientation updates for performance
+  const now = Date.now();
+  if (now - lastOrientationUpdate.value < ORIENTATION_THROTTLE) {
+    return;
+  }
+  lastOrientationUpdate.value = now;
+
   if (event.gamma !== null) {
     gamma.value = event.gamma;
-    // Convert gamma (-90 to 90) to tilt value (-1 to 1)
-    const tiltValue = Math.max(-1, Math.min(1, event.gamma / 45));
+
+    // Smooth the gamma value to prevent jittery updates
+    const smoothedGamma = smoothOrientation(event.gamma);
+
+    // Convert gamma (-90 to 90) to tilt value (-1 to 1) with deadzone
+    const deadzone = 2; // Degrees of deadzone to prevent micro-movements
+    let tiltValue = 0;
+
+    if (Math.abs(smoothedGamma) > deadzone) {
+      const adjustedGamma =
+        smoothedGamma > 0 ? smoothedGamma - deadzone : smoothedGamma + deadzone;
+      tiltValue = Math.max(-1, Math.min(1, adjustedGamma / 45));
+    }
+
     emit("tiltChange", tiltValue);
   }
 };
@@ -64,18 +110,19 @@ const requestPermission = async () => {
 
 const startListening = () => {
   if (isPermissionGranted.value) {
-    window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+    // Use passive event listener for better performance
+    window.addEventListener("deviceorientation", handleDeviceOrientation, {
+      passive: true,
+    });
     isSupported.value = true;
     emit("gyroscopeSupport", true);
   }
 };
 
 const stopListening = () => {
-  window.removeEventListener(
-    "deviceorientation",
-    handleDeviceOrientation,
-    true
-  );
+  window.removeEventListener("deviceorientation", handleDeviceOrientation);
+  // Clear buffers
+  orientationBuffer.value = [];
 };
 
 const checkSupport = () => {
