@@ -6,7 +6,7 @@ A Vue 3 + TypeScript web application that creates stunning lenticular effect car
 
 - **Multi-Image Support**: Upload 2-5 images for complex lenticular effects
 - **Smart Cropping**: Crop images to a mobile-optimized 3:4 portrait aspect ratio
-- **Dual Control Modes**: 
+- **Dual Control Modes**:
   - Auto mode using device gyroscope/accelerometer
   - Manual mode with drag controls and sliders
 - **Real-time 3D Rendering**: WebGL-based lenticular effect using Three.js
@@ -35,33 +35,39 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 ### 2. Core Components
 
 #### **StartScreen.vue**
+
 - Mode selection (Auto/Manual)
 - Gyroscope permission handling
 - App introduction and feature overview
 
 #### **ImageUploader.vue**
+
 - Drag & drop file upload
 - File validation and preview
 - Support for JPG, PNG, GIF formats
 
 #### **ImageCropper.vue**
+
 - Interactive crop area with 3:4 portrait aspect ratio constraint
 - Touch-enabled drag to reposition, pinch corner to resize
 - Visual grid overlay for composition guidance
 - Outputs standardized 600x800px portrait images
 
 #### **LenticularCard.vue**
+
 - 3D canvas container with touch and mouse interaction handling
 - Drag/swipe support for manual control
 - Real-time tilt value display and status indicators
 
 #### **LenticularPlane.vue**
+
 - WebGL shader-based lenticular effect
 - Multi-texture blending based on viewing angle
 - Parallax offset for depth perception
 - Visual enhancement effects (shimmer, rainbow lines)
 
 #### **DeviceOrientationHandler.vue**
+
 - Device orientation permission management
 - Gyroscope data processing and normalization
 - Cross-platform compatibility (iOS/Android)
@@ -73,7 +79,7 @@ The lenticular effect is achieved through a custom WebGL fragment shader that:
 1. **Creates Fine Strips**: Divides the image into very thin vertical strips (0.003 width)
 2. **Maps Tilt to Images**: Converts device tilt (-1 to 1) to image selection
 3. **Blends Between Images**: Smoothly transitions between adjacent images
-4. **Adds Visual Effects**: 
+4. **Adds Visual Effects**:
    - Vertical lines to simulate lenticular lens ridges
    - Shimmer effect for realistic light reflection
    - Subtle rainbow effect on the ridges
@@ -92,6 +98,7 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 - **Display**: 3.75x5 unit 3D plane maintaining proportions
 
 **Benefits of 3:4 Portrait over Landscape**:
+
 - **Natural mobile viewing**: Fits perfectly in portrait orientation
 - **Better thumb reach**: Easier to interact with on phones
 - **Reduced scrolling**: More content visible without scrolling
@@ -100,12 +107,14 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 ### 5. Touch and Mobile Interaction
 
 #### **Touch Support**
+
 - **Drag to Move**: Touch and drag crop area to reposition
 - **Pinch to Resize**: Touch corner handle and drag to resize
 - **Swipe Control**: Horizontal swipe on lenticular card for manual effect
 - **Prevent Scrolling**: `touch-action: none` prevents page scrolling during interaction
 
 #### **Mobile Optimizations**
+
 - **Fixed Bottom Bars**: Action buttons always visible and accessible
 - **Larger Touch Targets**: 44px minimum touch targets for accessibility
 - **Visual Feedback**: Clear hover states and active states for touch
@@ -114,12 +123,14 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 ### 6. Control Modes
 
 #### **Auto Mode (Gyroscope)**
+
 - Detects device orientation changes
 - Maps gamma rotation (-90° to 90°) to tilt value (-1 to 1)
 - Requires user permission on iOS 13+
 - Provides hands-free interaction
 
 #### **Manual Mode**
+
 - Touch/mouse drag interaction
 - Slider control for precise adjustment
 - Smooth return-to-center animation
@@ -136,7 +147,8 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
@@ -167,23 +179,30 @@ npm run build
 ## 🎨 Customization
 
 ### Aspect Ratio
+
 To change the card aspect ratio, modify the `CARD_ASPECT_RATIO` constant in:
+
 - `src/components/ImageCropper.vue`
 - `src/components/LenticularPlane.vue`
 
 Popular alternatives:
+
 - `16/10` - Widescreen format
 - `1/1` - Square format
 - `16/9` - Video format
 
 ### Shader Effects
+
 Customize the lenticular effect by modifying the fragment shader in `LenticularPlane.vue`:
+
 - `stripWidth`: Controls lenticular strip density
 - `lineIntensity`: Adjusts ridge visibility
 - `shimmer`: Controls light reflection effect
 
 ### Visual Design
+
 The app uses Tailwind CSS for styling. Key design tokens:
+
 - Color scheme: Slate/Purple gradient backgrounds
 - Typography: Inter font family
 - Spacing: 8px grid system
@@ -205,26 +224,57 @@ The app uses Tailwind CSS for styling. Key design tokens:
 ## 🐛 Troubleshooting
 
 ### Gyroscope Not Working
+
 - Ensure HTTPS connection (required for device sensors)
 - Grant permission when prompted
 - Try refreshing the page
 - Fall back to Manual mode if issues persist
 
 ### Touch Controls Not Responding
+
 - Ensure you're touching the crop area or resize handle directly
 - Try refreshing the page if touch events become unresponsive
 - Check that browser supports touch events
 
 ### Performance Issues
+
 - Reduce image file sizes before upload
 - Use fewer images (2-3 instead of 5)
 - Close other browser tabs
 - Try on a device with better GPU support
 
 ### Layout Issues on Mobile
+
 - Ensure viewport meta tag is present
 - Check that bottom controls are visible
 - Try rotating device if layout appears cramped
+
+## 🔧 Recent Fixes & Improvements
+
+### Version 1.1.0 - Mobile Optimization Update
+
+#### **Fixed Issues:**
+
+1. **Desktop Bottom Bar Visibility**: Fixed bottom action buttons being cut off on desktop screens
+2. **Mobile Aspect Ratio**: Switched to 3:4 portrait ratio optimized for mobile devices
+3. **Touch Controls**: Added comprehensive touch support for drag-to-move and pinch-to-resize
+4. **Control Mode Logic**: Fixed confusing button behavior in mode selection
+5. **TypeScript Errors**: Resolved all compilation errors for better development experience
+
+#### **New Features:**
+
+- **Fixed Bottom Bars**: Action buttons now always visible and accessible
+- **Touch-First Design**: All interactions optimized for touch devices
+- **Portrait Aspect Ratio**: 3:4 ratio perfect for mobile viewing
+- **Better Visual Feedback**: Enhanced touch states and interaction indicators
+- **Improved Layout**: Better spacing and organization for mobile interfaces
+
+#### **Technical Improvements:**
+
+- **Event Handling**: Proper touch event management with passive listeners
+- **Memory Management**: Better cleanup of event listeners and resources
+- **Performance**: Optimized touch interactions and reduced layout thrashing
+- **Accessibility**: Larger touch targets and better contrast ratios
 
 ## 📄 License
 
