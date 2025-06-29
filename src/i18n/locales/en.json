@@ -89,6 +89,7 @@
     "preparing": "Preparing frames...",
     "renderingFrame": "Rendering frame",
     "complete": "complete",
-    "generationError": "Error generating GIF. Please try again."
+    "generationError": "Error generating GIF. Please try again.",
+    "processingWarning": "Processing may take up to 1 minute on mobile devices..."
   }
 }

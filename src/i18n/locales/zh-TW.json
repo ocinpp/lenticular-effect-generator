@@ -89,6 +89,7 @@
     "preparing": "正在準備幀...",
     "renderingFrame": "正在渲染第",
     "complete": "完成",
-    "generationError": "產生 GIF 時發生錯誤，請重試。"
+    "generationError": "產生 GIF 時發生錯誤，請重試。",
+    "processingWarning": "在行動裝置上處理可能需要 1 分鐘..."
   }
 }

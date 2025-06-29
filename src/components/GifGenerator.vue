@@ -46,7 +46,7 @@ const GIF_SETTINGS = {
 const preloadImages = async () => {
   try {
     const imagePromises = props.images.map((src) => {
-      return new Promise<HTMLImageElement>((resolve) => {
+      return new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => resolve(img);
@@ -159,9 +159,9 @@ const generateGif = async () => {
     progress.value = 30;
     generationStatus.value = t("gif.generating");
 
-    // Create GIF with web workers enabled for better performance
+    // Create GIF with web workers disabled for better mobile compatibility
     const gif = new GIF({
-      workers: 2, // Enable 2 web workers for better performance
+      workers: 0, // Disable web workers for mobile compatibility
       quality: settings.quality,
       width: settings.width,
       height: settings.height,
@@ -170,7 +170,6 @@ const generateGif = async () => {
       transparent: null,
       background: "#000000",
       repeat: 0,
-      workerScript: "/gif.worker.js", // Path to the worker script in public directory
     });
 
     // Add progress event listener for real progress tracking
@@ -198,12 +197,12 @@ const generateGif = async () => {
     progress.value = 30;
     generationStatus.value = `${t("gif.generating")} 30%`;
 
-    // Use a promise-based approach with increased timeout for web workers
+    // Use a promise-based approach with timeout
     const gifBlob = await new Promise<Blob>((resolve, reject) => {
       let timeoutId: NodeJS.Timeout;
 
-      // Increased timeout for web worker processing (2 minutes for high quality)
-      const timeoutDuration = gifQuality.value === "high" ? 120000 : 90000;
+      // Timeout for mobile devices (shorter timeout)
+      const timeoutDuration = 60000; // 1 minute timeout for mobile
 
       // Set a timeout to prevent infinite waiting
       timeoutId = setTimeout(() => {
@@ -232,7 +231,7 @@ const generateGif = async () => {
       });
 
       // Start rendering
-      console.log("Starting GIF render with web workers...");
+      console.log("Starting GIF render...");
       gif.render();
     });
 
@@ -466,15 +465,16 @@ onUnmounted(() => {
 <template>
   <div
     v-if="isVisible"
-    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+    style="z-index: 9999"
     @click.self="closeModal"
   >
     <div
-      class="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+      class="bg-white rounded-xl p-4 sm:p-6 w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-800">
+      <div class="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-800">
           {{ t("gif.generateGif") }}
         </h2>
         <button
@@ -499,7 +499,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Settings (only show when not generating) -->
-      <div v-if="!isGenerating" class="space-y-4 mb-6">
+      <div v-if="!isGenerating" class="space-y-4 mb-4 sm:mb-6">
         <!-- Quality Setting -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">{{
@@ -508,7 +508,7 @@ onUnmounted(() => {
           <div class="grid grid-cols-2 gap-2">
             <button
               @click="gifQuality = 'basic'"
-              class="px-4 py-2 rounded-lg border transition-colors cursor-pointer"
+              class="px-3 sm:px-4 py-2 rounded-lg border transition-colors cursor-pointer text-sm"
               :class="
                 gifQuality === 'basic'
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -520,7 +520,7 @@ onUnmounted(() => {
             </button>
             <button
               @click="gifQuality = 'high'"
-              class="px-4 py-2 rounded-lg border transition-colors cursor-pointer"
+              class="px-3 sm:px-4 py-2 rounded-lg border transition-colors cursor-pointer text-sm"
               :class="
                 gifQuality === 'high'
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -593,9 +593,9 @@ onUnmounted(() => {
       </div>
 
       <!-- Generation Progress -->
-      <div v-if="isGenerating" class="mb-6">
+      <div v-if="isGenerating" class="mb-4 sm:mb-6">
         <div class="text-center mb-4">
-          <div class="text-lg font-semibold text-gray-800 mb-2">
+          <div class="text-base sm:text-lg font-semibold text-gray-800 mb-2">
             {{ generationStatus }}
           </div>
           <div class="text-sm text-gray-600">
@@ -629,8 +629,7 @@ onUnmounted(() => {
           class="mt-3 p-2 bg-yellow-50 rounded-lg"
         >
           <div class="text-xs text-yellow-800 text-center">
-            Processing with web workers may take 1-2 minutes for high quality
-            GIFs...
+            {{ t("gif.processingWarning") }}
           </div>
         </div>
       </div>
@@ -640,14 +639,14 @@ onUnmounted(() => {
         <button
           v-if="!isGenerating"
           @click="closeModal"
-          class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors cursor-pointer"
+          class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
         >
           {{ t("buttons.cancel") }}
         </button>
         <button
           v-if="!isGenerating"
           @click="generateGif"
-          class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer font-medium"
+          class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer font-medium text-sm sm:text-base"
         >
           {{ t("gif.generateGif") }}
         </button>
