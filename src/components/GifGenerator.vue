@@ -46,7 +46,7 @@ const GIF_SETTINGS = {
 const preloadImages = async () => {
   try {
     const imagePromises = props.images.map((src) => {
-      return new Promise<HTMLImageElement>((resolve, reject) => {
+      return new Promise<HTMLImageElement>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => resolve(img);
