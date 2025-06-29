@@ -150,7 +150,7 @@ const handleMove = (event: MouseEvent | TouchEvent) => {
     cropArea.value.y = newY;
   } else if (isResizing.value) {
     const deltaX = coords.clientX - dragStart.value.x;
-    const deltaY = coords.clientY - dragStart.value.y;
+    // const deltaY = coords.clientY - dragStart.value.y;
 
     if (resizeHandle.value === "resize-se") {
       // Maintain 3:4 aspect ratio during resize

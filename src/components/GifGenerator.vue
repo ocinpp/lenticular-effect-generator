@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { ref, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import GIF from "gif.js";
 
@@ -46,7 +46,7 @@ const GIF_SETTINGS = {
 const preloadImages = async () => {
   try {
     const imagePromises = props.images.map((src) => {
-      return new Promise<HTMLImageElement>((resolve, reject) => {
+      return new Promise<HTMLImageElement>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => resolve(img);
@@ -288,14 +288,14 @@ const renderLenticularEffect = (
   ctx.fillRect(0, 0, width, height);
 
   // Calculate which images to blend based on tilt
-  const imageSelector = (tiltValue + 1) * 0.5 * (images.length - 1);
-  const imageIndex1 = Math.floor(imageSelector);
-  const imageIndex2 = Math.ceil(imageSelector);
-  const mixFactor = imageSelector - imageIndex1;
+  // const imageSelector = (tiltValue + 1) * 0.5 * (images.length - 1);
+  // const imageIndex1 = Math.floor(imageSelector);
+  // const imageIndex2 = Math.ceil(imageSelector);
+  // const mixFactor = imageSelector - imageIndex1;
 
   // Clamp indices
-  const idx1 = Math.max(0, Math.min(imageIndex1, images.length - 1));
-  const idx2 = Math.max(0, Math.min(imageIndex2, images.length - 1));
+  // const idx1 = Math.max(0, Math.min(imageIndex1, images.length - 1));
+  // const idx2 = Math.max(0, Math.min(imageIndex2, images.length - 1));
 
   // Optimized lenticular strips effect
   const stripWidth = Math.max(3, Math.floor(width * 0.015)); // Wider strips for better performance

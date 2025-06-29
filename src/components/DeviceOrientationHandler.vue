@@ -14,7 +14,7 @@ const isSupported = ref(false);
 const isPermissionGranted = ref(false);
 const showPermissionModal = ref(false);
 const permissionDenied = ref(false);
-const beta = ref(0); // Front-to-back tilt
+// const beta = ref(0); // Front-to-back tilt
 const gamma = ref(0); // Left-to-right tilt
 
 // Performance optimization for orientation events
