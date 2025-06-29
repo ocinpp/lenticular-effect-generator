@@ -1,0 +1,94 @@
+{
+  "app": {
+    "title": "Lenticular Effect Generator",
+    "subtitle": "Create stunning multi-image tilt-responsive cards"
+  },
+  "buttons": {
+    "startCreating": "Start Creating",
+    "previous": "Previous",
+    "back": "Back",
+    "finish": "Finish",
+    "skipCrop": "Skip Crop",
+    "applyCrop": "Apply Crop",
+    "newCard": "New Card",
+    "allow": "Allow",
+    "skip": "Skip",
+    "chooseImage": "Choose Image",
+    "cancel": "Cancel"
+  },
+  "modes": {
+    "controlMode": "Control Mode",
+    "auto": "Auto (Gyroscope)",
+    "manual": "Manual (Drag)",
+    "autoMode": "Auto Mode",
+    "manualMode": "Manual Mode",
+    "autoModeActive": "Auto Mode Active:",
+    "manualModeActive": "Manual Mode Active:",
+    "autoModeDescription": "Tilt your device to see the lenticular effect",
+    "manualModeDescription": "Drag horizontally or use slider to control the effect"
+  },
+  "upload": {
+    "selectImage": "Select Image",
+    "uploadImage": "Upload Image",
+    "dropHere": "Drop your image here or click to browse",
+    "supportedFormats": "Supports JPG, PNG, GIF up to 10MB",
+    "imageSelected": "Image Selected",
+    "clickContinue": "Click \"Continue\" or upload a different image"
+  },
+  "crop": {
+    "cropImage": "Crop Image",
+    "adjustCrop": "Adjust the crop area to fit your desired composition",
+    "touchInstructions": "Touch: Drag to move • Pinch corner to resize",
+    "cropSize": "Crop size:",
+    "portraitRatio": "3:4 portrait",
+    "perfectAspectRatio": "Perfect aspect ratio for mobile viewing"
+  },
+  "preview": {
+    "lenticularEffect": "Lenticular Effect",
+    "images": "Images",
+    "strength": "Strength",
+    "view": "View",
+    "tiltDevice": "Tilt your device to see the effect",
+    "dragHorizontally": "Drag horizontally to see lenticular effect",
+    "manualControl": "Manual Control",
+    "left": "Left",
+    "center": "Center",
+    "right": "Right"
+  },
+  "progress": {
+    "max": "max",
+    "of": "of",
+    "preparingCard": "Preparing your lenticular card...",
+    "loading": "Loading...",
+    "chooseFirst": "Choose your first",
+    "chooseSecond": "Choose your second",
+    "chooseImage": "Choose image"
+  },
+  "permissions": {
+    "enableDeviceMotion": "Enable Device Motion",
+    "permissionDescription": "To experience the lenticular effect with device tilting, we need permission to access your device's orientation sensor."
+  },
+  "languages": {
+    "english": "English",
+    "traditionalChinese": "繁體中文",
+    "switchLanguage": "Switch Language"
+  },
+  "gif": {
+    "generateGif": "Generate GIF",
+    "downloadGif": "Download GIF",
+    "quality": "Quality",
+    "basicQuality": "Basic",
+    "highQuality": "High",
+    "duration": "Duration",
+    "seconds": "s",
+    "frames": "Frames",
+    "size": "Size",
+    "estimatedSize": "Est. size",
+    "previewSettings": "Preview Settings",
+    "generating": "Generating GIF...",
+    "preparing": "Preparing frames...",
+    "renderingFrame": "Rendering frame",
+    "complete": "complete",
+    "generationError": "Error generating GIF. Please try again."
+  }
+}

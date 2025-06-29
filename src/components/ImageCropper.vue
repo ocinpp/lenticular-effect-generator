@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   imageUrl: string;
@@ -147,7 +150,7 @@ const handleMove = (event: MouseEvent | TouchEvent) => {
     cropArea.value.y = newY;
   } else if (isResizing.value) {
     const deltaX = coords.clientX - dragStart.value.x;
-    // const deltaY = coords.clientY - dragStart.value.y;
+    const deltaY = coords.clientY - dragStart.value.y;
 
     if (resizeHandle.value === "resize-se") {
       // Maintain 3:4 aspect ratio during resize
@@ -343,7 +346,7 @@ onUnmounted(() => {
           <div
             class="absolute -top-8 left-0 bg-blue-600 text-white text-xs px-2 py-1 rounded pointer-events-none"
           >
-            3:4 Portrait
+            {{ t("crop.portraitRatio") }}
           </div>
         </div>
 
@@ -382,16 +385,16 @@ onUnmounted(() => {
       <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
         <div class="flex items-center justify-between mb-4">
           <div class="text-white text-sm">
-            <p class="font-medium">
-              Touch: Drag to move • Pinch corner to resize
-            </p>
+            <p class="font-medium">{{ t("crop.touchInstructions") }}</p>
             <p class="text-slate-400">
-              Crop size: {{ Math.round(cropArea.width / imageData.scale) }} ×
-              {{ Math.round(cropArea.height / imageData.scale) }}px (3:4
-              portrait)
+              {{ t("crop.cropSize") }}
+              {{ Math.round(cropArea.width / imageData.scale) }} ×
+              {{ Math.round(cropArea.height / imageData.scale) }}px ({{
+                t("crop.portraitRatio")
+              }})
             </p>
             <p class="text-blue-300 text-xs">
-              Perfect aspect ratio for mobile viewing
+              {{ t("crop.perfectAspectRatio") }}
             </p>
           </div>
         </div>
@@ -399,21 +402,21 @@ onUnmounted(() => {
         <div class="flex space-x-3">
           <button
             @click="$emit('back')"
-            class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+            class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors cursor-pointer"
           >
-            Back
+            {{ t("buttons.back") }}
           </button>
           <button
             @click="$emit('skip')"
-            class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
+            class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors cursor-pointer"
           >
-            Skip Crop
+            {{ t("buttons.skipCrop") }}
           </button>
           <button
             @click="cropImage"
-            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium cursor-pointer"
           >
-            Apply Crop
+            {{ t("buttons.applyCrop") }}
           </button>
         </div>
       </div>

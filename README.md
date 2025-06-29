@@ -12,6 +12,8 @@ A Vue 3 + TypeScript web application that creates stunning lenticular effect car
 - **Real-time 3D Rendering**: WebGL-based lenticular effect using Three.js
 - **Mobile-First Design**: Responsive interface optimized for mobile devices with touch support
 - **High Performance**: Optimized for smooth 60fps performance without browser crashes
+- **GIF Export**: Generate and download animated GIFs of the lenticular effect
+- **Multi-language Support**: Available in English and Traditional Chinese
 - **Progressive Web App**: Works offline and can be installed on devices
 
 ## 🔧 Technology Stack
@@ -22,6 +24,8 @@ A Vue 3 + TypeScript web application that creates stunning lenticular effect car
 - **Styling**: Tailwind CSS v4
 - **Build Tool**: Vite
 - **Device Sensors**: DeviceOrientationEvent API
+- **GIF Generation**: gif.js with web workers
+- **Internationalization**: Vue I18n
 
 ## 📱 How It Works
 
@@ -40,6 +44,7 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 - Mode selection (Auto/Manual)
 - Gyroscope permission handling
 - App introduction and feature overview
+- Language switcher (top-right corner)
 
 #### **ImageUploader.vue**
 
@@ -59,6 +64,7 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 - 3D canvas container with touch and mouse interaction handling
 - Drag/swipe support for manual control
 - Real-time tilt value display and status indicators
+- Always-visible GIF download button
 
 #### **LenticularPlane.vue**
 
@@ -72,6 +78,19 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 - Device orientation permission management
 - Gyroscope data processing and normalization
 - Cross-platform compatibility (iOS/Android)
+
+#### **GifGenerator.vue**
+
+- High-quality GIF generation with web workers
+- Customizable quality settings (Basic/High)
+- Adjustable duration and frame count
+- Progress tracking with real-time updates
+
+#### **LanguageSwitcher.vue**
+
+- Language selection dropdown
+- Persistent language preference storage
+- Globe icon for easy identification
 
 ### 3. Lenticular Effect Algorithm
 
@@ -137,7 +156,24 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 - Smooth return-to-center animation
 - Works on all devices without permissions
 
-### 7. Performance Optimizations
+### 7. GIF Generation System
+
+#### **High-Quality Export**
+
+- **Web Workers**: Uses dedicated workers for non-blocking GIF generation
+- **Quality Options**: Basic (300×400px) and High (450×600px) quality settings
+- **Customizable Duration**: 2-5 seconds with adjustable frame count (20-40 frames)
+- **Smooth Animation**: Oscillating tilt motion for natural lenticular effect
+- **Progress Tracking**: Real-time progress updates with detailed status
+
+#### **Performance Optimizations**
+
+- **Pre-loaded Images**: Images cached before generation starts
+- **Optimized Rendering**: Efficient canvas-based frame generation
+- **Memory Management**: Proper cleanup to prevent memory leaks
+- **Error Handling**: Graceful fallbacks for failed operations
+
+### 8. Performance Optimizations
 
 #### **Rendering Performance**
 
@@ -167,6 +203,21 @@ All images are processed to maintain a consistent **3:4 portrait aspect ratio**:
 - **Deadzone Implementation**: 2-degree deadzone prevents micro-movement triggers
 - **Buffer Management**: Circular buffers for smooth value interpolation
 - **Animation Throttling**: Optimized return-to-center animations
+
+### 9. Internationalization
+
+#### **Multi-language Support**
+
+- **Languages**: English and Traditional Chinese (繁體中文)
+- **Persistent Preferences**: Language choice saved to localStorage
+- **Complete Translation**: All UI elements and messages translated
+- **Contextual Content**: Appropriate content for each language
+
+#### **User Experience**
+
+- **Globe Icon**: Clear visual indicator for language switching
+- **Dropdown Interface**: Easy language selection with current language highlighted
+- **Seamless Switching**: Instant language changes without page reload
 
 ## 🚀 Getting Started
 
@@ -199,6 +250,7 @@ npm run build
 3. **Upload Images**: Add 2-5 images using drag & drop or file picker
 4. **Crop Images**: Adjust the 3:4 portrait crop area for each image
 5. **View Effect**: Experience the lenticular effect with tilt or drag controls
+6. **Export GIF**: Generate and download animated GIF of your creation
 
 ## 🎨 Customization
 
@@ -231,6 +283,14 @@ Adjust performance settings in `LenticularPlane.vue`:
 - `TILT_UPDATE_THROTTLE`: Update frequency in milliseconds (16ms for 60fps)
 - `TILT_SMOOTHING_SAMPLES`: Number of samples for smoothing (3 default)
 
+### GIF Generation Settings
+
+Customize GIF export in `GifGenerator.vue`:
+
+- `GIF_SETTINGS`: Quality presets for Basic and High quality
+- `totalFrames`: Default frame count (30 frames)
+- `gifDuration`: Default animation duration (3 seconds)
+
 ### Visual Design
 
 The app uses Tailwind CSS for styling. Key design tokens:
@@ -239,6 +299,14 @@ The app uses Tailwind CSS for styling. Key design tokens:
 - Typography: Inter font family
 - Spacing: 8px grid system
 - Animations: Smooth transitions and micro-interactions
+
+### Language Support
+
+Add new languages by:
+
+1. Creating new locale files in `src/i18n/locales/`
+2. Adding language options to `LanguageSwitcher.vue`
+3. Updating the language detection in `main.ts`
 
 ## 📱 Browser Support
 
@@ -251,7 +319,8 @@ The app uses Tailwind CSS for styling. Key design tokens:
 
 - **Device Orientation**: Only requested when Auto mode is selected
 - **File Access**: Images processed locally, never uploaded to servers
-- **Storage**: No persistent data storage, session-only
+- **Storage**: Language preference saved to localStorage only
+- **No Tracking**: No analytics or user tracking implemented
 
 ## 🐛 Troubleshooting
 
@@ -270,10 +339,17 @@ The app uses Tailwind CSS for styling. Key design tokens:
 
 ### Performance Issues
 
-- **Browser Crashes**: Fixed with performance optimizations in v1.2.0
+- **Browser Crashes**: Fixed with performance optimizations in v1.3.0
 - **Slow Performance**: Reduced texture quality automatically applied
 - **Memory Issues**: Automatic cleanup prevents memory leaks
 - **GPU Overload**: Shader complexity reduced for stability
+
+### GIF Generation Issues
+
+- **Slow Generation**: High quality GIFs may take 1-2 minutes
+- **Generation Fails**: Try reducing quality or frame count
+- **Large File Size**: Use Basic quality for smaller files
+- **Browser Timeout**: Refresh page and try again with lower settings
 
 ### Layout Issues on Mobile
 
@@ -281,7 +357,30 @@ The app uses Tailwind CSS for styling. Key design tokens:
 - Check that bottom controls are visible
 - Try rotating device if layout appears cramped
 
-## 🔧 Recent Fixes & Improvements
+## 🔧 Recent Updates
+
+### Version 1.3.0 - UI/UX Improvements & GIF Export
+
+#### **New Features:**
+
+1. **GIF Export System**: Generate and download animated GIFs of lenticular effects
+2. **Multi-language Support**: English and Traditional Chinese localization
+3. **Improved UI Layout**: Better button placement and visual hierarchy
+4. **Enhanced Mobile Experience**: Optimized touch interactions and responsive design
+
+#### **UI/UX Improvements:**
+
+- **Language Switcher**: Globe icon in top-right corner on start page only
+- **Preview Page Layout**: Title on left, "New Card" button on right
+- **Always-Visible GIF Button**: Download GIF button always accessible at bottom
+- **Better Visual Feedback**: Improved status indicators and progress displays
+
+#### **Technical Enhancements:**
+
+- **Web Workers**: GIF generation uses web workers for better performance
+- **Memory Optimization**: Improved cleanup and resource management
+- **Error Handling**: Better error recovery and user feedback
+- **Performance Monitoring**: Real-time progress tracking for GIF generation
 
 ### Version 1.2.0 - Performance & Stability Update
 

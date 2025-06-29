@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   imageUploaded: [imageData: string];
@@ -82,10 +85,10 @@ const removeImage = () => {
             ></path>
           </svg>
         </div>
-        <h3 class="text-white text-lg font-semibold mb-2">Upload Image</h3>
-        <p class="text-slate-300 mb-4">
-          Drop your image here or click to browse
-        </p>
+        <h3 class="text-white text-lg font-semibold mb-2">
+          {{ t("upload.uploadImage") }}
+        </h3>
+        <p class="text-slate-300 mb-4">{{ t("upload.dropHere") }}</p>
         <input
           type="file"
           accept="image/*"
@@ -97,10 +100,10 @@ const removeImage = () => {
           for="file-input"
           class="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors duration-300 font-medium"
         >
-          Choose Image
+          {{ t("buttons.chooseImage") }}
         </label>
         <p class="text-slate-400 text-sm mt-3">
-          Supports JPG, PNG, GIF up to 10MB
+          {{ t("upload.supportedFormats") }}
         </p>
       </div>
 
@@ -112,7 +115,7 @@ const removeImage = () => {
         />
         <button
           @click="removeImage"
-          class="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-300"
+          class="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-300 cursor-pointer"
         >
           <svg
             class="w-4 h-4"
@@ -129,10 +132,8 @@ const removeImage = () => {
           </svg>
         </button>
         <div class="mt-3 text-center">
-          <p class="text-white font-medium">Image Selected</p>
-          <p class="text-slate-300 text-sm">
-            Click "Continue" or upload a different image
-          </p>
+          <p class="text-white font-medium">{{ t("upload.imageSelected") }}</p>
+          <p class="text-slate-300 text-sm">{{ t("upload.clickContinue") }}</p>
         </div>
       </div>
     </div>

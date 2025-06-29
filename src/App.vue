@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import StartScreen from "./components/StartScreen.vue";
 import ImageUploader from "./components/ImageUploader.vue";
 import ImageCropper from "./components/ImageCropper.vue";
 import LenticularCard from "./components/LenticularCard.vue";
 import DeviceOrientationHandler from "./components/DeviceOrientationHandler.vue";
+import LanguageSwitcher from "./components/LanguageSwitcher.vue";
+
+const { t } = useI18n();
 
 interface ImageData {
   id: string;
@@ -159,6 +163,11 @@ onMounted(() => {
   <div
     class="h-dvh overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col"
   >
+    <!-- Language Switcher - Only on Start page -->
+    <div v-if="currentStep === 'start'" class="absolute top-4 right-4 z-30">
+      <LanguageSwitcher />
+    </div>
+
     <!-- Transition Overlay -->
     <div
       v-if="isTransitioning"
@@ -171,8 +180,8 @@ onMounted(() => {
         <p class="text-lg">
           {{
             currentStep === "preview"
-              ? "Preparing your lenticular card..."
-              : "Loading..."
+              ? t("progress.preparingCard")
+              : t("progress.loading")
           }}
         </p>
       </div>
@@ -199,15 +208,12 @@ onMounted(() => {
         <div class="max-w-4xl mx-auto">
           <div class="flex items-center justify-between mb-4">
             <h1 class="text-xl md:text-2xl font-bold text-white">
-              Select Image {{ currentImageIndex + 1 }}
+              {{ t("upload.selectImage") }} {{ currentImageIndex + 1 }}
             </h1>
-            <div class="text-sm text-slate-300">
-              {{ currentImageIndex + 1 }} of {{ maxImages }} max
-            </div>
           </div>
 
           <!-- Progress Bar -->
-          <div class="w-full bg-white/20 rounded-full h-2 mb-4">
+          <div class="w-full bg-white/20 rounded-full h-2 mb-2">
             <div
               class="bg-blue-500 h-2 rounded-full transition-all duration-300"
               :style="{
@@ -216,16 +222,22 @@ onMounted(() => {
             ></div>
           </div>
 
+          <!-- Progress Text - Moved below progress bar -->
+          <div class="text-sm text-slate-300 mb-4">
+            {{ currentImageIndex + 1 }} {{ t("progress.of") }} {{ maxImages }}
+            {{ t("progress.max") }}
+          </div>
+
           <p class="text-slate-300 text-sm">
-            Choose
             {{
               currentImageIndex === 0
-                ? "your first"
+                ? t("progress.chooseFirst")
                 : currentImageIndex === 1
-                ? "your second"
-                : `image ${currentImageIndex + 1}`
+                ? t("progress.chooseSecond")
+                : t("progress.chooseImage")
             }}
-            for the lenticular effect
+            {{ currentImageIndex + 1 }}
+            {{ t("upload.selectImage").toLowerCase() }}
           </p>
         </div>
       </header>
@@ -249,9 +261,9 @@ onMounted(() => {
               currentImageIndex--;
               currentStep = 'upload';
             "
-            class="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg transition-all duration-300"
+            class="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg transition-all duration-300 cursor-pointer"
           >
-            Previous
+            {{ t("buttons.previous") }}
           </button>
 
           <button
@@ -259,9 +271,10 @@ onMounted(() => {
               images.length >= minImages && currentImageIndex >= minImages - 1
             "
             @click="finishSelection"
-            class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-300"
+            class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-300 cursor-pointer"
           >
-            Finish ({{ images.length }} images)
+            {{ t("buttons.finish") }} ({{ images.length }}
+            {{ t("preview.images").toLowerCase() }})
           </button>
         </div>
       </div>
@@ -277,14 +290,15 @@ onMounted(() => {
         <div class="max-w-4xl mx-auto">
           <div class="flex items-center justify-between mb-2">
             <h1 class="text-xl md:text-2xl font-bold text-white">
-              Crop Image {{ currentImageIndex + 1 }}
+              {{ t("crop.cropImage") }} {{ currentImageIndex + 1 }}
             </h1>
             <div class="text-sm text-slate-300">
-              {{ currentImageIndex + 1 }} of {{ images.length }}
+              {{ currentImageIndex + 1 }} {{ t("progress.of") }}
+              {{ images.length }}
             </div>
           </div>
           <p class="text-slate-300 text-sm">
-            Adjust the crop area to fit your desired composition
+            {{ t("crop.adjustCrop") }}
           </p>
         </div>
       </header>
@@ -308,12 +322,16 @@ onMounted(() => {
     >
       <header class="relative z-20 px-4 py-3 flex-shrink-0">
         <div class="flex items-center justify-between max-w-6xl mx-auto">
+          <!-- Title on the left -->
           <h1 class="text-lg md:text-xl font-bold text-white">
-            Lenticular Effect ({{ images.length }} images)
+            {{ t("preview.lenticularEffect") }} ({{ images.length }}
+            {{ t("preview.images").toLowerCase() }})
           </h1>
+
+          <!-- New Card button on the right -->
           <button
             @click="resetApp"
-            class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg transition-all duration-300 hover:scale-105 text-sm"
+            class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg transition-all duration-300 hover:scale-105 text-sm cursor-pointer"
           >
             <svg
               class="w-4 h-4 mr-2"
@@ -328,7 +346,7 @@ onMounted(() => {
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               ></path>
             </svg>
-            New Card
+            {{ t("buttons.newCard") }}
           </button>
         </div>
       </header>

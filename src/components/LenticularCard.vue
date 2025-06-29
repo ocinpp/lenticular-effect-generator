@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { TresCanvas } from "@tresjs/core";
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from "three";
 import LenticularPlane from "./LenticularPlane.vue";
+import GifGenerator from "./GifGenerator.vue";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   images: string[];
@@ -17,6 +21,7 @@ const manualTilt = ref(0);
 const isDragging = ref(false);
 const startX = ref(0);
 const currentTilt = ref(0);
+const showGifGenerator = ref(false);
 
 // Performance optimization for manual controls
 const lastManualUpdate = ref(0);
@@ -122,6 +127,30 @@ const handleTouchEnd = (event: TouchEvent) => {
   handleEnd();
 };
 
+// GIF generation handlers
+const openGifGenerator = () => {
+  showGifGenerator.value = true;
+};
+
+const closeGifGenerator = () => {
+  showGifGenerator.value = false;
+};
+
+const handleGifGenerated = (gifBlob: Blob) => {
+  // Download the generated GIF
+  const url = URL.createObjectURL(gifBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `lenticular-effect-${Date.now()}.gif`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Close the generator
+  closeGifGenerator();
+};
+
 onMounted(() => {
   if (canvasContainer.value) {
     // Add mouse event listeners
@@ -200,8 +229,8 @@ onUnmounted(() => {
           <span class="text-white text-xs md:text-sm">
             {{
               gyroscopeEnabled && gyroscopePermissionGranted
-                ? "Auto Mode"
-                : "Manual Mode"
+                ? t("modes.autoMode")
+                : t("modes.manualMode")
             }}
           </span>
         </div>
@@ -214,7 +243,7 @@ onUnmounted(() => {
             <div class="text-lg md:text-xl font-bold text-white">
               {{ images.length }}
             </div>
-            <div class="text-xs text-slate-300">Images</div>
+            <div class="text-xs text-slate-300">{{ t("preview.images") }}</div>
           </div>
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
@@ -222,7 +251,9 @@ onUnmounted(() => {
             <div class="text-lg md:text-xl font-bold text-white">
               {{ Math.abs(currentTilt * 100).toFixed(0) }}%
             </div>
-            <div class="text-xs text-slate-300">Strength</div>
+            <div class="text-xs text-slate-300">
+              {{ t("preview.strength") }}
+            </div>
           </div>
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
@@ -230,22 +261,23 @@ onUnmounted(() => {
             <div class="text-lg md:text-xl font-bold text-white">
               {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
             </div>
-            <div class="text-xs text-slate-300">View</div>
+            <div class="text-xs text-slate-300">{{ t("preview.view") }}</div>
           </div>
         </div>
       </div>
 
-      <!-- Instructions Overlay -->
+      <!-- Instructions and Download GIF Button - Always visible at bottom -->
       <div
-        v-if="
-          (!gyroscopeEnabled ||
-            !gyroscopePermissionGranted ||
-            Math.abs(currentTilt) < 0.1) &&
-          !isDragging
-        "
-        class="absolute bottom-4 left-4 right-4 flex items-center justify-center"
+        class="absolute bottom-4 left-4 right-4 flex flex-col items-center justify-center space-y-3"
       >
+        <!-- Instructions (only show when not actively using the effect) -->
         <div
+          v-if="
+            (!gyroscopeEnabled ||
+              !gyroscopePermissionGranted ||
+              Math.abs(currentTilt) < 0.1) &&
+            !isDragging
+          "
           class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 text-center text-white pointer-events-none"
         >
           <div class="flex items-center space-x-2">
@@ -265,11 +297,34 @@ onUnmounted(() => {
             <span class="text-xs md:text-sm">
               {{
                 gyroscopeEnabled && gyroscopePermissionGranted
-                  ? "Tilt your device to see the effect"
-                  : "Drag horizontally to see lenticular effect"
+                  ? t("preview.tiltDevice")
+                  : t("preview.dragHorizontally")
               }}
             </span>
           </div>
+        </div>
+
+        <!-- Download GIF Button - Always visible -->
+        <div class="pointer-events-auto">
+          <button
+            @click="openGifGenerator"
+            class="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition-all duration-300 hover:scale-105 shadow-lg cursor-pointer"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            <span class="text-sm font-medium">{{ t("gif.downloadGif") }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -281,7 +336,9 @@ onUnmounted(() => {
     >
       <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
         <div class="text-center mb-2">
-          <span class="text-white text-sm">Manual Control</span>
+          <span class="text-white text-sm">{{
+            t("preview.manualControl")
+          }}</span>
         </div>
         <input
           type="range"
@@ -292,12 +349,20 @@ onUnmounted(() => {
           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
         />
         <div class="flex justify-between text-xs text-slate-400 mt-1">
-          <span>Left</span>
-          <span>Center</span>
-          <span>Right</span>
+          <span>{{ t("preview.left") }}</span>
+          <span>{{ t("preview.center") }}</span>
+          <span>{{ t("preview.right") }}</span>
         </div>
       </div>
     </div>
+
+    <!-- GIF Generator Modal -->
+    <GifGenerator
+      :images="images"
+      :is-visible="showGifGenerator"
+      @close="closeGifGenerator"
+      @gif-generated="handleGifGenerated"
+    />
   </div>
 </template>
 

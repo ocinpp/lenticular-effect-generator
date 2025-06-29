@@ -6,6 +6,6 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   optimizeDeps: {
-    include: ['three', '@tresjs/core', '@tresjs/cientos']
+    include: ['three', '@tresjs/core', '@tresjs/cientos', 'gif.js']
   }
 })

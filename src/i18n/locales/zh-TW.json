@@ -1,0 +1,94 @@
+{
+  "app": {
+    "title": "光柵效果產生器",
+    "subtitle": "創建令人驚豔的多圖像傾斜響應卡片"
+  },
+  "buttons": {
+    "startCreating": "開始創建",
+    "previous": "上一步",
+    "back": "返回",
+    "finish": "完成",
+    "skipCrop": "跳過裁剪",
+    "applyCrop": "應用裁剪",
+    "newCard": "新卡片",
+    "allow": "允許",
+    "skip": "跳過",
+    "chooseImage": "選擇圖片",
+    "cancel": "取消"
+  },
+  "modes": {
+    "controlMode": "控制模式",
+    "auto": "自動（陀螺儀）",
+    "manual": "手動（拖拽）",
+    "autoMode": "自動模式",
+    "manualMode": "手動模式",
+    "autoModeActive": "自動模式已啟用：",
+    "manualModeActive": "手動模式已啟用：",
+    "autoModeDescription": "傾斜您的設備以查看光柵效果",
+    "manualModeDescription": "水平拖拽或使用滑桿控制效果"
+  },
+  "upload": {
+    "selectImage": "選擇圖片",
+    "uploadImage": "上傳圖片",
+    "dropHere": "將圖片拖放到此處或點擊瀏覽",
+    "supportedFormats": "支援 JPG、PNG、GIF，最大 10MB",
+    "imageSelected": "圖片已選擇",
+    "clickContinue": "點擊「繼續」或上傳其他圖片"
+  },
+  "crop": {
+    "cropImage": "裁剪圖片",
+    "adjustCrop": "調整裁剪區域以符合您想要的構圖",
+    "touchInstructions": "觸控：拖拽移動 • 捏拉角落調整大小",
+    "cropSize": "裁剪尺寸：",
+    "portraitRatio": "3:4 直向",
+    "perfectAspectRatio": "適合行動裝置觀看的完美比例"
+  },
+  "preview": {
+    "lenticularEffect": "光柵效果",
+    "images": "圖片",
+    "strength": "強度",
+    "view": "視角",
+    "tiltDevice": "傾斜您的設備以查看效果",
+    "dragHorizontally": "水平拖拽以查看光柵效果",
+    "manualControl": "手動控制",
+    "left": "左",
+    "center": "中",
+    "right": "右"
+  },
+  "progress": {
+    "max": "最多",
+    "of": "共",
+    "preparingCard": "正在準備您的光柵卡片...",
+    "loading": "載入中...",
+    "chooseFirst": "選擇您的第一張",
+    "chooseSecond": "選擇您的第二張",
+    "chooseImage": "選擇圖片"
+  },
+  "permissions": {
+    "enableDeviceMotion": "啟用設備動作",
+    "permissionDescription": "為了體驗設備傾斜的光柵效果，我們需要權限來存取您設備的方向感測器。"
+  },
+  "languages": {
+    "english": "English",
+    "traditionalChinese": "繁體中文",
+    "switchLanguage": "切換語言"
+  },
+  "gif": {
+    "generateGif": "產生 GIF",
+    "downloadGif": "下載 GIF",
+    "quality": "品質",
+    "basicQuality": "基本",
+    "highQuality": "高品質",
+    "duration": "持續時間",
+    "seconds": "秒",
+    "frames": "幀數",
+    "size": "尺寸",
+    "estimatedSize": "預估大小",
+    "previewSettings": "預覽設定",
+    "generating": "正在產生 GIF...",
+    "preparing": "正在準備幀...",
+    "renderingFrame": "正在渲染第",
+    "complete": "完成",
+    "generationError": "產生 GIF 時發生錯誤，請重試。"
+  }
+}

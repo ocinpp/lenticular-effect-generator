@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   tiltChange: [value: number];
@@ -11,7 +14,7 @@ const isSupported = ref(false);
 const isPermissionGranted = ref(false);
 const showPermissionModal = ref(false);
 const permissionDenied = ref(false);
-// const beta = ref(0); // Front-to-back tilt
+const beta = ref(0); // Front-to-back tilt
 const gamma = ref(0); // Left-to-right tilt
 
 // Performance optimization for orientation events
@@ -178,23 +181,24 @@ onUnmounted(() => {
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
   >
     <div class="bg-white rounded-lg p-6 max-w-sm w-full">
-      <h3 class="text-lg font-semibold mb-3">Enable Device Motion</h3>
+      <h3 class="text-lg font-semibold mb-3">
+        {{ t("permissions.enableDeviceMotion") }}
+      </h3>
       <p class="text-gray-600 mb-4">
-        To experience the lenticular effect with device tilting, we need
-        permission to access your device's orientation sensor.
+        {{ t("permissions.permissionDescription") }}
       </p>
       <div class="flex space-x-3">
         <button
           @click="enableGyroscope"
-          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors cursor-pointer"
         >
-          Allow
+          {{ t("buttons.allow") }}
         </button>
         <button
           @click="skipGyroscope"
-          class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors"
+          class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors cursor-pointer"
         >
-          Skip
+          {{ t("buttons.skip") }}
         </button>
       </div>
     </div>
