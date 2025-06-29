@@ -88,8 +88,14 @@
     "generating": "Generating GIF...",
     "preparing": "Preparing frames...",
     "renderingFrame": "Rendering frame",
+    "renderingFrames": "Rendering animation frames...",
+    "preparingEncoding": "Preparing for encoding...",
+    "encoding": "Encoding GIF (this may take a moment)...",
+    "finalizing": "Finalizing GIF...",
     "complete": "complete",
     "generationError": "Error generating GIF. Please try again.",
-    "processingWarning": "Processing may take up to 1 minute on mobile devices..."
+    "processingWarning": "Processing may take up to 1 minute on mobile devices...",
+    "mobileOptimized": "Mobile Optimized",
+    "mobileWarning": "Settings optimized for mobile performance. Lower quality = faster generation."
   }
 }

@@ -111,24 +111,40 @@ const handleMouseUp = () => {
   handleEnd();
 };
 
-// Touch events
+// Touch events - with proper event handling
 const handleTouchStart = (event: TouchEvent) => {
+  // Don't prevent default for buttons and interactive elements
+  const target = event.target as HTMLElement;
+  if (target.closest("button") || target.closest('[role="button"]')) {
+    return;
+  }
+
   event.preventDefault();
   handleStart(event.touches[0].clientX);
 };
 
 const handleTouchMove = (event: TouchEvent) => {
-  event.preventDefault();
-  handleMove(event.touches[0].clientX);
+  // Only prevent default if we're actually dragging
+  if (isDragging.value) {
+    event.preventDefault();
+    handleMove(event.touches[0].clientX);
+  }
 };
 
 const handleTouchEnd = (event: TouchEvent) => {
-  event.preventDefault();
-  handleEnd();
+  if (isDragging.value) {
+    event.preventDefault();
+    handleEnd();
+  }
 };
 
-// GIF generation handlers
-const openGifGenerator = () => {
+// GIF generation handlers with better mobile support
+const openGifGenerator = (event?: Event) => {
+  console.log("GIF Generator button clicked");
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   showGifGenerator.value = true;
 };
 
@@ -189,8 +205,9 @@ onUnmounted(() => {
     <!-- 3D Canvas - Takes most of the screen -->
     <div
       ref="canvasContainer"
-      class="flex-1 relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm touch-none"
+      class="flex-1 relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm"
       :class="{ 'cursor-grabbing': isDragging }"
+      style="touch-action: pan-y pinch-zoom"
     >
       <TresCanvas
         clear-color="#000000"
@@ -268,7 +285,7 @@ onUnmounted(() => {
 
       <!-- Instructions and Download GIF Button - Always visible at bottom -->
       <div
-        class="absolute bottom-4 left-4 right-4 flex flex-col items-center justify-center space-y-3"
+        class="absolute bottom-4 left-4 right-4 flex flex-col items-center justify-center space-y-3 pointer-events-none"
       >
         <!-- Instructions (only show when not actively using the effect) -->
         <div
@@ -278,7 +295,7 @@ onUnmounted(() => {
               Math.abs(currentTilt) < 0.1) &&
             !isDragging
           "
-          class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 text-center text-white pointer-events-none"
+          class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 text-center text-white"
         >
           <div class="flex items-center space-x-2">
             <svg
@@ -304,14 +321,20 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Download GIF Button - Always visible -->
+        <!-- Download GIF Button - Always visible with enhanced mobile support -->
         <div class="pointer-events-auto">
           <button
             @click="openGifGenerator"
-            class="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition-all duration-300 hover:scale-105 shadow-lg cursor-pointer"
+            @touchstart.stop
+            @touchend.stop="openGifGenerator"
+            class="flex items-center space-x-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-6 py-3 rounded-full transition-all duration-200 shadow-lg cursor-pointer select-none"
+            style="
+              touch-action: manipulation;
+              -webkit-tap-highlight-color: transparent;
+            "
           >
             <svg
-              class="w-4 h-4"
+              class="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -388,7 +411,11 @@ onUnmounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.touch-none {
-  touch-action: none;
+/* Enhanced button styling for mobile */
+button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 </style>

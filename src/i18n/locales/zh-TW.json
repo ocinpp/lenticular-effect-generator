@@ -88,8 +88,14 @@
     "generating": "正在產生 GIF...",
     "preparing": "正在準備幀...",
     "renderingFrame": "正在渲染第",
+    "renderingFrames": "正在渲染動畫幀...",
+    "preparingEncoding": "正在準備編碼...",
+    "encoding": "正在編碼 GIF（可能需要一些時間）...",
+    "finalizing": "正在完成 GIF...",
     "complete": "完成",
     "generationError": "產生 GIF 時發生錯誤，請重試。",
-    "processingWarning": "在行動裝置上處理可能需要 1 分鐘..."
+    "processingWarning": "在行動裝置上處理可能需要 1 分鐘...",
+    "mobileOptimized": "行動裝置優化",
+    "mobileWarning": "設定已針對行動裝置效能優化。較低品質 = 更快產生。"
   }
 }
