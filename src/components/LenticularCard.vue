@@ -35,6 +35,9 @@ const isMobile =
 const lastManualUpdate = ref(0);
 const MANUAL_UPDATE_THROTTLE = isMobile ? 33 : 16; // 30fps on mobile, 60fps on desktop
 
+// Mobile-friendly 3:4 portrait aspect ratio for better mobile viewing
+const CARD_ASPECT_RATIO = 3 / 4;
+
 // Computed pixel ratio for TypeScript compatibility
 const pixelRatio = computed(() => {
   if (typeof window !== "undefined") {
@@ -54,6 +57,10 @@ watch(
       props.gyroscopePermissionGranted &&
       !isDragging.value
     ) {
+      // Gyroscope mode: use the gyroscope value
+      currentTilt.value = newValue;
+    } else if (!props.gyroscopeEnabled || !props.gyroscopePermissionGranted) {
+      // Manual mode: use the manual value from range input
       currentTilt.value = newValue;
     }
   }
@@ -68,11 +75,7 @@ const updateManualTilt = (newTilt: number) => {
   lastManualUpdate.value = now;
 
   manualTilt.value = newTilt;
-  if (
-    !props.gyroscopeEnabled ||
-    !props.gyroscopePermissionGranted ||
-    !props.tiltValue
-  ) {
+  if (!props.gyroscopeEnabled || !props.gyroscopePermissionGranted) {
     currentTilt.value = manualTilt.value;
     emit("tiltChange", currentTilt.value);
   }
@@ -193,7 +196,7 @@ onUnmounted(() => {
                 : 'bg-yellow-400'
             "
           ></div>
-          <span class="text-white text-xs md:text-sm">
+          <span class="text-white text-xs">
             {{
               gyroscopeEnabled && gyroscopePermissionGranted
                 ? t("modes.autoMode")
@@ -207,7 +210,7 @@ onUnmounted(() => {
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-sm md:text-xl font-bold text-white">
+            <div class="text-sm font-bold text-white">
               {{ images.length }}
             </div>
             <div class="text-xs text-slate-300">
@@ -217,7 +220,7 @@ onUnmounted(() => {
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-sm md:text-xl font-bold text-white">
+            <div class="text-sm font-bold text-white">
               {{ Math.abs(currentTilt * 100).toFixed(0) }}%
             </div>
             <div class="text-xs text-slate-300">
@@ -227,7 +230,7 @@ onUnmounted(() => {
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-sm md:text-xl font-bold text-white">
+            <div class="text-sm font-bold text-white">
               {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
             </div>
             <div class="text-xs text-slate-300">
@@ -246,7 +249,8 @@ onUnmounted(() => {
         ref="canvasContainer"
         class="relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm w-full h-full"
         :class="{ 'cursor-grabbing': isDragging }"
-        style="touch-action: pan-y pinch-zoom; aspect-ratio: 3/4"
+        style="touch-action: pan-y pinch-zoom"
+        :style="{ 'aspect-ratio': CARD_ASPECT_RATIO }"
         @mousedown="handleMouseDown"
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"

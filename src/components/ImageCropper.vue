@@ -52,7 +52,7 @@ const handleImageLoad = () => {
   // Calculate display size
   const containerRect = container.getBoundingClientRect();
   const maxWidth = containerRect.width - 40;
-  const maxHeight = containerRect.height - 120;
+  const maxHeight = containerRect.height - 250;
 
   const aspectRatio = img.naturalWidth / img.naturalHeight;
 
