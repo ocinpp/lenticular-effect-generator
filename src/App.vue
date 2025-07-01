@@ -329,8 +329,7 @@ onMounted(() => {
         <div class="flex items-center justify-between max-w-6xl mx-auto">
           <!-- Title on the left -->
           <h1 class="text-lg md:text-xl font-bold text-white">
-            {{ t("preview.lenticularEffect") }} ({{ images.length }}
-            {{ t("preview.images").toLowerCase() }})
+            {{ t("preview.lenticularEffect") }}
           </h1>
 
           <!-- New Card button on the right -->
