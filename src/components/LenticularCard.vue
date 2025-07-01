@@ -57,6 +57,10 @@ watch(
       props.gyroscopePermissionGranted &&
       !isDragging.value
     ) {
+      // Gyroscope mode: use the gyroscope value
+      currentTilt.value = newValue;
+    } else if (!props.gyroscopeEnabled || !props.gyroscopePermissionGranted) {
+      // Manual mode: use the manual value from range input
       currentTilt.value = newValue;
     }
   }
