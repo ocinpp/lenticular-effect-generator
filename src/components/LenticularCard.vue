@@ -35,6 +35,9 @@ const isMobile =
 const lastManualUpdate = ref(0);
 const MANUAL_UPDATE_THROTTLE = isMobile ? 33 : 16; // 30fps on mobile, 60fps on desktop
 
+// Mobile-friendly 3:4 portrait aspect ratio for better mobile viewing
+const CARD_ASPECT_RATIO = 3 / 4;
+
 // Computed pixel ratio for TypeScript compatibility
 const pixelRatio = computed(() => {
   if (typeof window !== "undefined") {
@@ -246,7 +249,8 @@ onUnmounted(() => {
         ref="canvasContainer"
         class="relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm w-full h-full"
         :class="{ 'cursor-grabbing': isDragging }"
-        style="touch-action: pan-y pinch-zoom; aspect-ratio: 3/4"
+        style="touch-action: pan-y pinch-zoom"
+        :style="{ 'aspect-ratio': CARD_ASPECT_RATIO }"
         @mousedown="handleMouseDown"
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
