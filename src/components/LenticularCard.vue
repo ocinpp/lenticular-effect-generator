@@ -71,11 +71,7 @@ const updateManualTilt = (newTilt: number) => {
   lastManualUpdate.value = now;
 
   manualTilt.value = newTilt;
-  if (
-    !props.gyroscopeEnabled ||
-    !props.gyroscopePermissionGranted ||
-    !props.tiltValue
-  ) {
+  if (!props.gyroscopeEnabled || !props.gyroscopePermissionGranted) {
     currentTilt.value = manualTilt.value;
     emit("tiltChange", currentTilt.value);
   }
