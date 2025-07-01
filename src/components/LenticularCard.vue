@@ -217,101 +217,101 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
-    <!-- 3D Canvas - Takes most of the screen with 3:4 portrait aspect ratio -->
-    <div
-      ref="canvasContainer"
-      class="flex-1 relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm max-w-full mx-auto"
-      :class="{ 'cursor-grabbing': isDragging }"
-      style="
-        touch-action: pan-y pinch-zoom;
-        aspect-ratio: 3/4;
-        max-height: calc(100vh - 200px);
-      "
-    >
-      <TresCanvas
-        clear-color="#000000"
-        :shadows="false"
-        :shadow-map-type="BasicShadowMap"
-        :color-space="SRGBColorSpace"
-        :tone-mapping="NoToneMapping"
-        :antialias="false"
-        :power-preference="isMobile ? 'low-power' : 'high-performance'"
-        :pixel-ratio="pixelRatio"
-        class="w-full h-full"
-      >
-        <TresPerspectiveCamera :position="[0, 0, 5]" />
-        <TresAmbientLight :intensity="isMobile ? 0.8 : 0.6" />
-        <TresDirectionalLight
-          v-if="!isMobile"
-          :position="[10, 10, 5]"
-          :intensity="0.8"
-        />
-
-        <LenticularPlane :images="images" :tilt="currentTilt" />
-      </TresCanvas>
-
-      <!-- Overlay Status and Controls -->
+  <div class="flex flex-col items-center justify-center p-4">
+    <!-- 3D Canvas Container with proper aspect ratio -->
+    <div class="w-full max-w-md mx-auto">
       <div
-        class="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none"
+        ref="canvasContainer"
+        class="relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm w-full"
+        :class="{ 'cursor-grabbing': isDragging }"
+        style="touch-action: pan-y pinch-zoom; aspect-ratio: 3/4"
       >
-        <!-- Status Indicator -->
-        <div
-          class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2"
+        <TresCanvas
+          clear-color="#000000"
+          :shadows="false"
+          :shadow-map-type="BasicShadowMap"
+          :color-space="SRGBColorSpace"
+          :tone-mapping="NoToneMapping"
+          :antialias="false"
+          :power-preference="isMobile ? 'low-power' : 'high-performance'"
+          :pixel-ratio="pixelRatio"
+          class="w-full h-full"
         >
-          <div
-            class="w-2 h-2 rounded-full"
-            :class="
-              gyroscopeEnabled &&
-              gyroscopePermissionGranted &&
-              Math.abs(currentTilt) > 0.1
-                ? 'bg-green-400 animate-pulse'
-                : 'bg-yellow-400'
-            "
-          ></div>
-          <span class="text-white text-xs md:text-sm">
-            {{
-              gyroscopeEnabled && gyroscopePermissionGranted
-                ? t("modes.autoMode")
-                : t("modes.manualMode")
-            }}
-          </span>
-        </div>
+          <TresPerspectiveCamera :position="[0, 0, 5]" />
+          <TresAmbientLight :intensity="isMobile ? 0.8 : 0.6" />
+          <TresDirectionalLight
+            v-if="!isMobile"
+            :position="[10, 10, 5]"
+            :intensity="0.8"
+          />
 
-        <!-- Effect Information -->
-        <div class="flex space-x-2">
+          <LenticularPlane :images="images" :tilt="currentTilt" />
+        </TresCanvas>
+
+        <!-- Overlay Status and Controls -->
+        <div
+          class="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none"
+        >
+          <!-- Status Indicator -->
           <div
-            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+            class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2"
           >
-            <div class="text-lg md:text-xl font-bold text-white">
-              {{ images.length }}
-            </div>
-            <div class="text-xs text-slate-300">{{ t("preview.images") }}</div>
+            <div
+              class="w-2 h-2 rounded-full"
+              :class="
+                gyroscopeEnabled &&
+                gyroscopePermissionGranted &&
+                Math.abs(currentTilt) > 0.1
+                  ? 'bg-green-400 animate-pulse'
+                  : 'bg-yellow-400'
+              "
+            ></div>
+            <span class="text-white text-xs md:text-sm">
+              {{
+                gyroscopeEnabled && gyroscopePermissionGranted
+                  ? t("modes.autoMode")
+                  : t("modes.manualMode")
+              }}
+            </span>
           </div>
-          <div
-            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
-          >
-            <div class="text-lg md:text-xl font-bold text-white">
-              {{ Math.abs(currentTilt * 100).toFixed(0) }}%
+
+          <!-- Effect Information -->
+          <div class="flex space-x-2">
+            <div
+              class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+            >
+              <div class="text-lg md:text-xl font-bold text-white">
+                {{ images.length }}
+              </div>
+              <div class="text-xs text-slate-300">
+                {{ t("preview.images") }}
+              </div>
             </div>
-            <div class="text-xs text-slate-300">
-              {{ t("preview.strength") }}
+            <div
+              class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+            >
+              <div class="text-lg md:text-xl font-bold text-white">
+                {{ Math.abs(currentTilt * 100).toFixed(0) }}%
+              </div>
+              <div class="text-xs text-slate-300">
+                {{ t("preview.strength") }}
+              </div>
             </div>
-          </div>
-          <div
-            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
-          >
-            <div class="text-lg md:text-xl font-bold text-white">
-              {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
+            <div
+              class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+            >
+              <div class="text-lg md:text-xl font-bold text-white">
+                {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
+              </div>
+              <div class="text-xs text-slate-300">{{ t("preview.view") }}</div>
             </div>
-            <div class="text-xs text-slate-300">{{ t("preview.view") }}</div>
           </div>
         </div>
       </div>
 
-      <!-- Instructions and Download GIF Button - Always visible at bottom -->
+      <!-- Instructions overlay -->
       <div
-        class="absolute bottom-4 left-4 right-4 flex flex-col items-center justify-center space-y-3 pointer-events-none"
+        class="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-none"
       >
         <!-- Instructions (only show when not actively using the effect) -->
         <div
@@ -346,73 +346,71 @@ onUnmounted(() => {
             </span>
           </div>
         </div>
-
-        <!-- Download GIF Button - Always visible with enhanced mobile support -->
-        <div class="pointer-events-auto">
-          <button
-            @click="openGifGenerator"
-            @touchstart.stop
-            @touchend.stop="openGifGenerator"
-            class="flex items-center space-x-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-6 py-3 rounded-full transition-all duration-200 shadow-lg cursor-pointer select-none"
-            style="
-              touch-action: manipulation;
-              -webkit-tap-highlight-color: transparent;
-            "
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              ></path>
-            </svg>
-            <span class="text-sm font-medium">{{ t("gif.downloadGif") }}</span>
-          </button>
-        </div>
       </div>
     </div>
-
-    <!-- Manual Controls (for desktop or when gyroscope is disabled) -->
-    <div
-      v-if="!gyroscopeEnabled || !gyroscopePermissionGranted"
-      class="mt-4 px-4"
-    >
-      <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-        <div class="text-center mb-2">
-          <span class="text-white text-sm">{{
-            t("preview.manualControl")
-          }}</span>
-        </div>
-        <input
-          type="range"
-          min="-1"
-          max="1"
-          step="0.02"
-          v-model="currentTilt"
-          class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-        />
-        <div class="flex justify-between text-xs text-slate-400 mt-1">
-          <span>{{ t("preview.left") }}</span>
-          <span>{{ t("preview.center") }}</span>
-          <span>{{ t("preview.right") }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- GIF Generator Modal -->
-    <GifGenerator
-      :images="images"
-      :is-visible="showGifGenerator"
-      @close="closeGifGenerator"
-      @gif-generated="handleGifGenerated"
-    />
   </div>
+
+  <!-- Download GIF Button - Below canvas -->
+  <div class="mt-4 flex justify-center">
+    <button
+      @click="openGifGenerator"
+      @touchstart.stop
+      @touchend.stop="openGifGenerator"
+      class="flex items-center space-x-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-6 py-3 rounded-full transition-all duration-200 shadow-lg cursor-pointer select-none"
+      style="
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      "
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        ></path>
+      </svg>
+      <span class="text-sm font-medium">{{ t("gif.downloadGif") }}</span>
+    </button>
+  </div>
+
+  <!-- Manual Controls (for desktop or when gyroscope is disabled) -->
+  <div
+    v-if="!gyroscopeEnabled || !gyroscopePermissionGranted"
+    class="mt-4 w-full max-w-md mx-auto"
+  >
+    <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+      <div class="text-center mb-2">
+        <span class="text-white text-sm">{{ t("preview.manualControl") }}</span>
+      </div>
+      <input
+        type="range"
+        min="-1"
+        max="1"
+        step="0.02"
+        v-model="currentTilt"
+        class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+      />
+      <div class="flex justify-between text-xs text-slate-400 mt-1">
+        <span>{{ t("preview.left") }}</span>
+        <span>{{ t("preview.center") }}</span>
+        <span>{{ t("preview.right") }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GIF Generator Modal -->
+  <GifGenerator
+    :images="images"
+    :is-visible="showGifGenerator"
+    @close="closeGifGenerator"
+    @gif-generated="handleGifGenerated"
+  />
 </template>
 
 <style scoped>
