@@ -43,8 +43,10 @@ const enableManualMode = () => {
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 px-4 pb-8 flex items-center justify-center min-h-0">
-      <div class="w-full max-w-md text-center space-y-6">
+    <main class="px-4 pb-8 m-auto items-center justify-center min-h-0">
+      <div
+        class="w-full sm:max-w-md sm:min-w-md min-w-[90dvw] max-w-[90dvw] text-center space-y-6"
+      >
         <!-- Start Button -->
         <div>
           <button

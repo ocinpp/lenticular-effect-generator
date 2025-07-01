@@ -384,7 +384,7 @@ onUnmounted(() => {
     >
       <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
         <div class="flex items-center justify-between mb-4">
-          <div class="text-white text-sm">
+          <div class="text-white text-xs">
             <p class="font-medium">{{ t("crop.touchInstructions") }}</p>
             <p class="text-slate-400">
               {{ t("crop.cropSize") }}
@@ -402,19 +402,19 @@ onUnmounted(() => {
         <div class="flex space-x-3">
           <button
             @click="$emit('back')"
-            class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors cursor-pointer"
+            class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors cursor-pointer text-sm"
           >
             {{ t("buttons.back") }}
           </button>
           <button
             @click="$emit('skip')"
-            class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors cursor-pointer"
+            class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors cursor-pointer text-sm"
           >
             {{ t("buttons.skipCrop") }}
           </button>
           <button
             @click="cropImage"
-            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium cursor-pointer"
+            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium cursor-pointer text-sm"
           >
             {{ t("buttons.applyCrop") }}
           </button>

@@ -27,6 +27,12 @@ const TILT_UPDATE_THROTTLE = 16; // ~60fps max
 const TILT_SMOOTHING_SAMPLES = 3;
 const MAX_TEXTURE_SIZE = 512; // Reduced for better performance
 
+// Mobile-specific performance optimizations
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const MOBILE_MAX_TEXTURE_SIZE = 256; // Even smaller for mobile
+const MOBILE_GEOMETRY_SEGMENTS = 16; // Reduced geometry complexity for mobile
+const DESKTOP_GEOMETRY_SEGMENTS = 32;
+
 // Vertex shader
 const vertexShader = `
   varying vec2 vUv;
@@ -120,7 +126,7 @@ const fragmentShader = `
 
 const resizeImage = (
   imageUrl: string,
-  maxSize: number = MAX_TEXTURE_SIZE
+  maxSize: number = isMobile ? MOBILE_MAX_TEXTURE_SIZE : MAX_TEXTURE_SIZE
 ): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -228,8 +234,9 @@ const loadTextures = async () => {
     const planeWidth = maxSize * CARD_ASPECT_RATIO;
     const planeHeight = maxSize;
 
-    // Reduced geometry complexity for better performance
-    const geometry = new PlaneGeometry(planeWidth, planeHeight, 32, 32);
+    // Reduced geometry complexity for better performance (mobile-optimized)
+    const segments = isMobile ? MOBILE_GEOMETRY_SEGMENTS : DESKTOP_GEOMETRY_SEGMENTS;
+    const geometry = new PlaneGeometry(planeWidth, planeHeight, segments, segments);
     meshRef.value.geometry = geometry;
 
     // Dispose of old material to prevent memory leaks
@@ -237,21 +244,23 @@ const loadTextures = async () => {
       material.value.dispose();
     }
 
-    // Create shader material with optimized settings
+    // Create shader material with mobile-optimized settings
+    const resolution = isMobile ? MOBILE_MAX_TEXTURE_SIZE : MAX_TEXTURE_SIZE;
     const shaderMaterial = new ShaderMaterial({
       uniforms: {
         textures: { value: validTextures },
         tilt: { value: props.tilt },
-        resolution: { value: new Vector2(512, 512) }, // Reduced resolution
+        resolution: { value: new Vector2(resolution, resolution) },
         imageCount: { value: props.images.length },
       },
       vertexShader,
       fragmentShader,
-      // Performance optimizations
+      // Performance optimizations (enhanced for mobile)
       transparent: false,
       alphaTest: 0,
       depthWrite: true,
       depthTest: true,
+      precision: isMobile ? "mediump" : "highp", // Lower precision on mobile
     });
 
     material.value = shaderMaterial;
@@ -315,8 +324,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <TresMesh ref="meshRef" :position="[0, 0, 0]">
-    <TresPlaneGeometry :args="[3.75, 5, 32, 32]" />
-    <TresMeshBasicMaterial color="#ffffff" />
-  </TresMesh>
+  <TresMesh ref="meshRef" :position="[0, 0, 0]" />
 </template>
