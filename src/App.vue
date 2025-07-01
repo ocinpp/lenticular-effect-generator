@@ -5,6 +5,7 @@ import StartScreen from "./components/StartScreen.vue";
 import ImageUploader from "./components/ImageUploader.vue";
 import ImageCropper from "./components/ImageCropper.vue";
 import LenticularCard from "./components/LenticularCard.vue";
+import DownloadButton from "./components/DownloadButton.vue";
 import DeviceOrientationHandler from "./components/DeviceOrientationHandler.vue";
 import LanguageSwitcher from "./components/LanguageSwitcher.vue";
 
@@ -150,6 +151,10 @@ const toggleMode = () => {
       enableGyroscope();
     }
   }
+};
+
+const handleManualTiltChange = (value: number) => {
+  tiltValue.value = value;
 };
 
 onMounted(() => {
@@ -351,15 +356,27 @@ onMounted(() => {
         </div>
       </header>
 
-      <main class="flex-1 px-4 pb-4 min-h-0 overflow-hidden">
+      <main
+        class="flex-1 flex px-4 min-h-0 items-center justify-center overflow-hidden"
+      >
         <LenticularCard
           :images="images.map((img: ImageData) => img.croppedUrl || img.originalUrl)"
           :tilt-value="tiltValue"
           :is-gyroscope-supported="isGyroscopeSupported"
           :gyroscope-enabled="gyroscopeEnabled"
           :gyroscope-permission-granted="gyroscopePermissionGranted"
+          @tilt-change="handleManualTiltChange"
         />
       </main>
+
+      <!-- Download Button Component -->
+      <DownloadButton
+        :images="images.map((img: ImageData) => img.croppedUrl || img.originalUrl)"
+        :gyroscope-enabled="gyroscopeEnabled"
+        :gyroscope-permission-granted="gyroscopePermissionGranted"
+        :current-tilt="tiltValue"
+        @tilt-change="handleManualTiltChange"
+      />
     </div>
 
     <!-- Background Animation -->
