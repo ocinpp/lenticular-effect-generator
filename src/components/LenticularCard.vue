@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from "vue";
+import { ref, onMounted, watch, onUnmounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { TresCanvas } from "@tresjs/core";
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from "three";
@@ -23,9 +23,25 @@ const startX = ref(0);
 const currentTilt = ref(0);
 const showGifGenerator = ref(false);
 
+// Mobile detection for performance optimizations
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
 // Performance optimization for manual controls
 const lastManualUpdate = ref(0);
-const MANUAL_UPDATE_THROTTLE = 16; // ~60fps max
+const MANUAL_UPDATE_THROTTLE = isMobile ? 33 : 16; // 30fps on mobile, 60fps on desktop
+
+// Computed pixel ratio for TypeScript compatibility
+const pixelRatio = computed(() => {
+  if (typeof window !== "undefined") {
+    return isMobile
+      ? Math.min(window.devicePixelRatio, 2)
+      : window.devicePixelRatio;
+  }
+  return 1;
+});
 
 // Watch for tilt value changes from gyroscope or manual input
 watch(
@@ -202,12 +218,16 @@ onUnmounted(() => {
 
 <template>
   <div class="h-full flex flex-col">
-    <!-- 3D Canvas - Takes most of the screen -->
+    <!-- 3D Canvas - Takes most of the screen with 3:4 portrait aspect ratio -->
     <div
       ref="canvasContainer"
-      class="flex-1 relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm"
+      class="flex-1 relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm max-w-full mx-auto"
       :class="{ 'cursor-grabbing': isDragging }"
-      style="touch-action: pan-y pinch-zoom"
+      style="
+        touch-action: pan-y pinch-zoom;
+        aspect-ratio: 3/4;
+        max-height: calc(100vh - 200px);
+      "
     >
       <TresCanvas
         clear-color="#000000"
@@ -216,11 +236,17 @@ onUnmounted(() => {
         :color-space="SRGBColorSpace"
         :tone-mapping="NoToneMapping"
         :antialias="false"
+        :power-preference="isMobile ? 'low-power' : 'high-performance'"
+        :pixel-ratio="pixelRatio"
         class="w-full h-full"
       >
         <TresPerspectiveCamera :position="[0, 0, 5]" />
-        <TresAmbientLight :intensity="0.6" />
-        <TresDirectionalLight :position="[10, 10, 5]" :intensity="0.8" />
+        <TresAmbientLight :intensity="isMobile ? 0.8 : 0.6" />
+        <TresDirectionalLight
+          v-if="!isMobile"
+          :position="[10, 10, 5]"
+          :intensity="0.8"
+        />
 
         <LenticularPlane :images="images" :tilt="currentTilt" />
       </TresCanvas>
