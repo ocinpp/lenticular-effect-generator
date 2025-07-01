@@ -176,7 +176,9 @@ onUnmounted(() => {
     <!-- Main Content Area -->
     <div class="flex-1 flex items-center justify-center py-4 min-h-0">
       <!-- Overlay Status and Controls -->
-      <div class="flex items-start justify-between pointer-events-none z-10">
+      <div
+        class="flex items-start justify-between pointer-events-none z-10 w-full"
+      >
         <!-- Status Indicator -->
         <div
           class="flex items-center space-x-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-2"
@@ -201,21 +203,21 @@ onUnmounted(() => {
         </div>
 
         <!-- Effect Information -->
-        <div class="flex space-x-2">
-          <div
-            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+        <div class="flex space-x-1">
+          <!-- <div
+            class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-lg md:text-xl font-bold text-white">
+            <div class="text-sm md:text-xl font-bold text-white">
               {{ images.length }}
             </div>
             <div class="text-xs text-slate-300">
               {{ t("preview.images") }}
             </div>
-          </div>
+          </div> -->
           <div
-            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+            class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-lg md:text-xl font-bold text-white">
+            <div class="text-sm md:text-xl font-bold text-white">
               {{ Math.abs(currentTilt * 100).toFixed(0) }}%
             </div>
             <div class="text-xs text-slate-300">
@@ -223,9 +225,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div
-            class="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 text-center"
+            class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-lg md:text-xl font-bold text-white">
+            <div class="text-sm md:text-xl font-bold text-white">
               {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
             </div>
             <div class="text-xs text-slate-300">

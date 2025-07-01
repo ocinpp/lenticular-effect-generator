@@ -54,17 +54,17 @@ const handleGifGenerated = (gifBlob: Blob) => {
   <div
     class="flex-shrink-0 px-4 py-4 bg-black/20 backdrop-blur-sm border-t border-white/10"
   >
-    <div class="max-w-md mx-auto space-y-4">
+    <div class="max-w-md mx-auto space-y-2">
       <!-- Manual Controls (for desktop or when gyroscope is disabled) -->
       <div
         v-if="!props.gyroscopeEnabled || !props.gyroscopePermissionGranted"
-        class="bg-white/10 backdrop-blur-sm rounded-lg p-3"
+        class="bg-white/10 backdrop-blur-sm rounded-lg p-1"
       >
-        <div class="text-center mb-2">
-          <span class="text-white text-sm">{{
+        <!-- <div class="text-center mb-1">
+          <span class="text-white text-xs">{{
             t("preview.manualControl")
           }}</span>
-        </div>
+        </div> -->
         <input
           type="range"
           min="-1"
