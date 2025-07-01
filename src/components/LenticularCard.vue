@@ -239,7 +239,7 @@ onUnmounted(() => {
     </div>
 
     <!-- 3D Canvas Container with proper aspect ratio -->
-    <div class="w-full max-w-md mx-auto">
+    <div class="w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto">
       <div
         ref="canvasContainer"
         class="relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm w-full"
@@ -273,7 +273,9 @@ onUnmounted(() => {
         </TresCanvas>
 
         <!-- Instructions overlay -->
-        <div class="py-4 flex justify-center pointer-events-none z-10">
+        <div
+          class="absolute bottom-2 w-full py-4 flex justify-center pointer-events-none z-99"
+        >
           <!-- Instructions (only show when not actively using the effect) -->
           <div
             v-if="
