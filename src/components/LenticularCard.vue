@@ -204,7 +204,7 @@ onUnmounted(() => {
 
         <!-- Effect Information -->
         <div class="flex space-x-1">
-          <!-- <div
+          <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
             <div class="text-sm md:text-xl font-bold text-white">
@@ -213,7 +213,7 @@ onUnmounted(() => {
             <div class="text-xs text-slate-300">
               {{ t("preview.images") }}
             </div>
-          </div> -->
+          </div>
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
@@ -239,10 +239,12 @@ onUnmounted(() => {
     </div>
 
     <!-- 3D Canvas Container with proper aspect ratio -->
-    <div class="w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto">
+    <div
+      class="flex-1 h-[50dvh] w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto"
+    >
       <div
         ref="canvasContainer"
-        class="relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm w-full"
+        class="relative rounded-xl overflow-hidden cursor-grab bg-black/20 backdrop-blur-sm w-full h-full"
         :class="{ 'cursor-grabbing': isDragging }"
         style="touch-action: pan-y pinch-zoom; aspect-ratio: 3/4"
         @mousedown="handleMouseDown"
