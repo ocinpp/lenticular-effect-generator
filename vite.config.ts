@@ -4,7 +4,13 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue({
+    template: {
+      compilerOptions: {
+        isCustomElement: (tag) => ['TresMesh', 'TresPerspectiveCamera', 'TresAmbientLight', 'TresDirectionalLight'].includes(tag),
+      }
+    }
+  }), tailwindcss()],
   optimizeDeps: {
     include: ['three', '@tresjs/core', '@tresjs/cientos', 'gif.js']
   }
