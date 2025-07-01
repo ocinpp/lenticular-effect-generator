@@ -45,7 +45,7 @@ const enableManualMode = () => {
     <!-- Main Content -->
     <main class="px-4 pb-8 m-auto items-center justify-center min-h-0">
       <div
-        class="w-full md:max-w-md md:min-w-md min-w-[90dvw] max-w-[90dvw] text-center space-y-6"
+        class="w-full sm:max-w-md sm:min-w-md min-w-[90dvw] max-w-[90dvw] text-center space-y-6"
       >
         <!-- Start Button -->
         <div>
