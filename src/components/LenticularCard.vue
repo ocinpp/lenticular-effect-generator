@@ -196,7 +196,7 @@ onUnmounted(() => {
                 : 'bg-yellow-400'
             "
           ></div>
-          <span class="text-white text-xs md:text-sm">
+          <span class="text-white text-xs">
             {{
               gyroscopeEnabled && gyroscopePermissionGranted
                 ? t("modes.autoMode")
@@ -210,7 +210,7 @@ onUnmounted(() => {
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-sm md:text-xl font-bold text-white">
+            <div class="text-sm font-bold text-white">
               {{ images.length }}
             </div>
             <div class="text-xs text-slate-300">
@@ -220,7 +220,7 @@ onUnmounted(() => {
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-sm md:text-xl font-bold text-white">
+            <div class="text-sm font-bold text-white">
               {{ Math.abs(currentTilt * 100).toFixed(0) }}%
             </div>
             <div class="text-xs text-slate-300">
@@ -230,7 +230,7 @@ onUnmounted(() => {
           <div
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
-            <div class="text-sm md:text-xl font-bold text-white">
+            <div class="text-sm font-bold text-white">
               {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
             </div>
             <div class="text-xs text-slate-300">
