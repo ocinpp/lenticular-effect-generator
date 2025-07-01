@@ -359,7 +359,7 @@ Add new languages by:
 
 ## 🔧 Recent Updates
 
-### Version 1.3.0 - UI/UX Improvements & GIF Export
+### Update 3 - UI/UX Improvements & GIF Export
 
 #### **New Features:**
 
@@ -382,7 +382,7 @@ Add new languages by:
 - **Error Handling**: Better error recovery and user feedback
 - **Performance Monitoring**: Real-time progress tracking for GIF generation
 
-### Version 1.2.0 - Performance & Stability Update
+### Update 2 - Performance & Stability Update
 
 #### **Critical Performance Fixes:**
 
@@ -406,7 +406,7 @@ Add new languages by:
 - **Responsive Controls**: Immediate feedback without performance lag
 - **Visual Quality**: Maintained effect quality while improving performance
 
-### Version 1.1.0 - Mobile Optimization Update
+### Update 1 - Mobile Optimization Update
 
 #### **Fixed Issues:**
 
