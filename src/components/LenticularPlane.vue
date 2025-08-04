@@ -7,10 +7,12 @@ import {
   TextureLoader,
   Vector2,
 } from "three";
+import type { LenticularDirection } from "./DirectionSelector.vue";
 
 const props = defineProps<{
   images: string[];
   tilt: number;
+  direction: LenticularDirection;
 }>();
 
 const meshRef = ref<Mesh>();
@@ -28,7 +30,10 @@ const TILT_SMOOTHING_SAMPLES = 3;
 const MAX_TEXTURE_SIZE = 512; // Reduced for better performance
 
 // Mobile-specific performance optimizations
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
 const MOBILE_MAX_TEXTURE_SIZE = 256; // Even smaller for mobile
 const MOBILE_GEOMETRY_SEGMENTS = 16; // Reduced geometry complexity for mobile
 const DESKTOP_GEOMETRY_SEGMENTS = 32;
@@ -43,7 +48,7 @@ const vertexShader = `
 `;
 
 // Optimized fragment shader with reduced complexity
-const fragmentShader = `
+const getFragmentShader = (direction: LenticularDirection) => `
   uniform sampler2D textures[5];
   uniform float tilt;
   uniform vec2 resolution;
@@ -59,7 +64,11 @@ const fragmentShader = `
 
     // Reduced strip density for better performance
     float stripWidth = 0.005; // Slightly wider strips for better performance
-    float stripIndex = floor(uv.x / stripWidth);
+    float stripIndex = ${
+      direction === "vertical"
+        ? "floor(uv.x / stripWidth)"
+        : "floor(uv.y / stripWidth)"
+    };
 
     // Simplified tilt calculation
     float tiltFactor = tilt * 1.5; // Reduced amplification
@@ -78,7 +87,11 @@ const fragmentShader = `
     imageIndex2 = clamp(imageIndex2, 0, imageCount - 1);
 
     // Reduced parallax effect for performance
-    vec2 parallaxOffset = vec2(tilt * 0.01, 0.0);
+    vec2 parallaxOffset = ${
+      direction === "vertical"
+        ? "vec2(tilt * 0.01, 0.0)"
+        : "vec2(0.0, tilt * 0.01)"
+    };
     vec2 uv1 = clamp(imageUv + parallaxOffset * float(imageIndex1 - imageCount/2), 0.0, 1.0);
     vec2 uv2 = clamp(imageUv + parallaxOffset * float(imageIndex2 - imageCount/2), 0.0, 1.0);
 
@@ -101,18 +114,19 @@ const fragmentShader = `
     vec4 finalColor = mix(color1, color2, smoothstep(0.0, 1.0, mixFactor));
 
     // Simplified line pattern for better performance
-    float linePattern = sin(uv.x * 800.0); // Reduced frequency
+    float lineCoord = ${direction === "vertical" ? "uv.x" : "uv.y"};
+    float linePattern = sin(lineCoord * 800.0); // Reduced frequency
     float lineIntensity = smoothstep(0.85, 1.0, abs(linePattern)) * 0.15; // Reduced intensity
 
     // Simplified shimmer effect
-    float shimmer = sin(uv.x * 200.0 + tilt * 10.0) * 0.05; // Reduced complexity
+    float shimmer = sin(lineCoord * 200.0 + tilt * 10.0) * 0.05; // Reduced complexity
 
     // Combine effects with reduced intensity
     finalColor.rgb += lineIntensity * vec3(0.8, 0.85, 0.9);
     finalColor.rgb += shimmer * 0.1;
 
     // Simplified rainbow effect
-    float rainbow = sin(uv.x * 300.0 + tilt * 8.0) * 0.04; // Reduced complexity
+    float rainbow = sin(lineCoord * 300.0 + tilt * 8.0) * 0.04; // Reduced complexity
     finalColor.r += rainbow * lineIntensity * 0.8;
     finalColor.g += rainbow * lineIntensity * 0.6;
     finalColor.b += rainbow * lineIntensity * 0.7;
@@ -235,8 +249,15 @@ const loadTextures = async () => {
     const planeHeight = maxSize;
 
     // Reduced geometry complexity for better performance (mobile-optimized)
-    const segments = isMobile ? MOBILE_GEOMETRY_SEGMENTS : DESKTOP_GEOMETRY_SEGMENTS;
-    const geometry = new PlaneGeometry(planeWidth, planeHeight, segments, segments);
+    const segments = isMobile
+      ? MOBILE_GEOMETRY_SEGMENTS
+      : DESKTOP_GEOMETRY_SEGMENTS;
+    const geometry = new PlaneGeometry(
+      planeWidth,
+      planeHeight,
+      segments,
+      segments
+    );
     meshRef.value.geometry = geometry;
 
     // Dispose of old material to prevent memory leaks
@@ -254,7 +275,7 @@ const loadTextures = async () => {
         imageCount: { value: props.images.length },
       },
       vertexShader,
-      fragmentShader,
+      fragmentShader: getFragmentShader(props.direction),
       // Performance optimizations (enhanced for mobile)
       transparent: false,
       alphaTest: 0,
@@ -312,6 +333,15 @@ watch(
     loadTextures();
   },
   { deep: true }
+);
+
+// Watch for direction changes
+watch(
+  () => props.direction,
+  () => {
+    cleanup();
+    loadTextures();
+  }
 );
 
 onMounted(() => {

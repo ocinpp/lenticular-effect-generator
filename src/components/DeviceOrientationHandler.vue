@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
+import type { LenticularDirection } from "./DirectionSelector.vue";
 
 const { t } = useI18n();
+
+const props = defineProps<{
+  direction: LenticularDirection;
+}>();
 
 const emit = defineEmits<{
   tiltChange: [value: number];
@@ -14,8 +19,8 @@ const isSupported = ref(false);
 const isPermissionGranted = ref(false);
 const showPermissionModal = ref(false);
 const permissionDenied = ref(false);
-// const beta = ref(0); // Front-to-back tilt
-const gamma = ref(0); // Left-to-right tilt
+const beta = ref(0); // Front-to-back tilt (for horizontal effect)
+const gamma = ref(0); // Left-to-right tilt (for vertical effect)
 
 // Performance optimization for orientation events
 const lastOrientationUpdate = ref(0);
@@ -51,24 +56,39 @@ const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
   }
   lastOrientationUpdate.value = now;
 
-  if (event.gamma !== null) {
+  let tiltValue = 0;
+  const deadzone = 2; // Degrees of deadzone to prevent micro-movements
+
+  if (props.direction === "vertical" && event.gamma !== null) {
+    // Vertical lenticular effect - use gamma (left-to-right tilt)
     gamma.value = event.gamma;
 
     // Smooth the gamma value to prevent jittery updates
     const smoothedGamma = smoothOrientation(event.gamma);
 
     // Convert gamma (-90 to 90) to tilt value (-1 to 1) with deadzone
-    const deadzone = 2; // Degrees of deadzone to prevent micro-movements
-    let tiltValue = 0;
-
     if (Math.abs(smoothedGamma) > deadzone) {
       const adjustedGamma =
         smoothedGamma > 0 ? smoothedGamma - deadzone : smoothedGamma + deadzone;
       tiltValue = Math.max(-1, Math.min(1, adjustedGamma / 45));
     }
+  } else if (props.direction === "horizontal" && event.beta !== null) {
+    // Horizontal lenticular effect - use beta (front-to-back tilt)
+    beta.value = event.beta;
 
-    emit("tiltChange", tiltValue);
+    // Smooth the beta value to prevent jittery updates
+    const smoothedBeta = smoothOrientation(event.beta);
+
+    // Convert beta (-180 to 180) to tilt value (-1 to 1) with deadzone
+    // We'll use a smaller range for better control (around -45 to 45 degrees)
+    if (Math.abs(smoothedBeta) > deadzone) {
+      const adjustedBeta =
+        smoothedBeta > 0 ? smoothedBeta - deadzone : smoothedBeta + deadzone;
+      tiltValue = Math.max(-1, Math.min(1, adjustedBeta / 45));
+    }
   }
+
+  emit("tiltChange", tiltValue);
 };
 
 const requestPermission = async () => {

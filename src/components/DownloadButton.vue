@@ -2,11 +2,13 @@
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import GifGenerator from "./GifGenerator.vue";
+import type { LenticularDirection } from "./DirectionSelector.vue";
 
 const { t } = useI18n();
 
 const props = defineProps<{
   images: string[];
+  direction: LenticularDirection;
   gyroscopeEnabled: boolean;
   gyroscopePermissionGranted: boolean;
   currentTilt: number;
@@ -120,6 +122,7 @@ const handleGifGenerated = (gifBlob: Blob) => {
   <!-- GIF Generator Modal -->
   <GifGenerator
     :images="props.images"
+    :direction="props.direction"
     :is-visible="showGifGenerator"
     @close="closeGifGenerator"
     @gif-generated="handleGifGenerated"

@@ -14,7 +14,20 @@
     "allow": "Allow",
     "skip": "Skip",
     "chooseImage": "Choose Image",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "continue": "Continue"
+  },
+  "direction": {
+    "chooseEffect": "Choose Lenticular Effect",
+    "subtitle": "Select the direction of your lenticular effect",
+    "vertical": "Vertical Effect",
+    "horizontal": "Horizontal Effect",
+    "verticalDescription": "Images change when tilting left and right",
+    "horizontalDescription": "Images change when tilting up and down",
+    "tiltLeftRight": "Tilt left/right",
+    "tiltUpDown": "Tilt up/down",
+    "tip": "Pro Tip",
+    "tipDescription": "You can change this later, so don't worry about getting it perfect!"
   },
   "modes": {
     "controlMode": "Control Mode",
@@ -49,7 +62,10 @@
     "strength": "Strength",
     "view": "View",
     "tiltDevice": "Tilt your device to see the effect",
+    "tiltDeviceHorizontally": "Tilt your device left/right to see the effect",
+    "tiltDeviceVertically": "Tilt your device up/down to see the effect",
     "dragHorizontally": "Drag horizontally to see lenticular effect",
+    "dragVertically": "Drag vertically to see lenticular effect",
     "manualControl": "Manual Control",
     "left": "Left",
     "center": "Center",
