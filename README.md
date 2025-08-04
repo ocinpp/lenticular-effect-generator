@@ -6,6 +6,7 @@ A Vue 3 + TypeScript web application that creates stunning lenticular effect car
 
 - **Multi-Image Support**: Upload 2-5 images for complex lenticular effects
 - **Smart Cropping**: Crop images to a mobile-optimized 3:4 portrait aspect ratio
+- **Dual Orientation Modes**: Choose between vertical and horizontal lenticular effects
 - **Dual Control Modes**:
   - Auto mode using device gyroscope/accelerometer
   - Manual mode with drag controls and sliders
@@ -38,6 +39,12 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 ```
 
 ### 2. Core Components
+
+#### **DirectionSelector.vue**
+
+- Lenticular orientation selection (Vertical/Horizontal)
+- Visual preview of each orientation mode
+- Seamless switching between effect directions
 
 #### **StartScreen.vue**
 
@@ -96,11 +103,13 @@ Mode Selection → Step-by-Step → 3:4 Portrait → Real-time Effect
 
 The lenticular effect is achieved through a custom WebGL fragment shader that:
 
-1. **Creates Fine Strips**: Divides the image into very thin vertical strips (0.005 width)
+1. **Creates Fine Strips**: Divides the image into very thin strips (0.005 width)
+   - Vertical strips for vertical lenticular effect
+   - Horizontal strips for horizontal lenticular effect
 2. **Maps Tilt to Images**: Converts device tilt (-1 to 1) to image selection
 3. **Blends Between Images**: Smoothly transitions between adjacent images
 4. **Adds Visual Effects**:
-   - Vertical lines to simulate lenticular lens ridges
+   - Ridge lines perpendicular to strip direction (horizontal lines for vertical effect, vertical lines for horizontal effect)
    - Shimmer effect for realistic light reflection
    - Subtle rainbow effect on the ridges
    - Parallax offset for depth perception
@@ -359,9 +368,23 @@ Add new languages by:
 
 ## 🔧 Recent Updates
 
-### Update 3 - UI/UX Improvements & GIF Export
+### Update 4 - Horizontal Lenticular Effect & Ridge Line Fixes
 
 #### **New Features:**
+
+1. **Horizontal Lenticular Mode**: Added support for horizontal lenticular effects alongside vertical mode
+2. **Direction Selector**: New component for choosing between vertical and horizontal orientations
+3. **Proper Ridge Line Orientation**: Fixed ridge lines to be perpendicular to lenticular strip direction
+
+#### **Bug Fixes:**
+
+- **Ridge Line Orientation**: Fixed incorrect vertical ridge lines appearing in horizontal mode
+- **Shader Coordinate System**: Corrected UV coordinate usage based on lenticular direction
+- **Visual Consistency**: Ensured 3D preview matches GIF generation output
+
+### Update 3 - UI/UX Improvements & GIF Export
+
+#### **Key Features:**
 
 1. **GIF Export System**: Generate and download animated GIFs of lenticular effects
 2. **Multi-language Support**: English and Traditional Chinese localization
@@ -416,7 +439,7 @@ Add new languages by:
 4. **Control Mode Logic**: Fixed confusing button behavior in mode selection
 5. **TypeScript Errors**: Resolved all compilation errors for better development experience
 
-#### **New Features:**
+#### **Mobile Features:**
 
 - **Fixed Bottom Bars**: Action buttons now always visible and accessible
 - **Touch-First Design**: All interactions optimized for touch devices
