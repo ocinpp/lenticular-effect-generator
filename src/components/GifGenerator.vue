@@ -407,7 +407,7 @@ const renderLenticularEffect = (
       }
     }
   } else {
-    // Horizontal lenticular effect - vertical strips
+    // Horizontal lenticular effect - horizontal strips
     const stripHeight = Math.max(4, Math.floor(height * 0.02)); // Wider strips
     const numStrips = Math.ceil(height / stripHeight);
 
@@ -482,7 +482,7 @@ const renderLenticularEffect = (
         }
       }
 
-      // Reduced ridge lines for performance
+      // Reduced ridge lines for performance (horizontal lines for horizontal effect)
       if (strip % 10 === 0) {
         ctx.save();
         ctx.globalAlpha = 0.05;

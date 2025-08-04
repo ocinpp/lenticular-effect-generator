@@ -114,18 +114,19 @@ const getFragmentShader = (direction: LenticularDirection) => `
     vec4 finalColor = mix(color1, color2, smoothstep(0.0, 1.0, mixFactor));
 
     // Simplified line pattern for better performance
-    float linePattern = sin(uv.x * 800.0); // Reduced frequency
+    float lineCoord = ${direction === "vertical" ? "uv.x" : "uv.y"};
+    float linePattern = sin(lineCoord * 800.0); // Reduced frequency
     float lineIntensity = smoothstep(0.85, 1.0, abs(linePattern)) * 0.15; // Reduced intensity
 
     // Simplified shimmer effect
-    float shimmer = sin(uv.x * 200.0 + tilt * 10.0) * 0.05; // Reduced complexity
+    float shimmer = sin(lineCoord * 200.0 + tilt * 10.0) * 0.05; // Reduced complexity
 
     // Combine effects with reduced intensity
     finalColor.rgb += lineIntensity * vec3(0.8, 0.85, 0.9);
     finalColor.rgb += shimmer * 0.1;
 
     // Simplified rainbow effect
-    float rainbow = sin(uv.x * 300.0 + tilt * 8.0) * 0.04; // Reduced complexity
+    float rainbow = sin(lineCoord * 300.0 + tilt * 8.0) * 0.04; // Reduced complexity
     finalColor.r += rainbow * lineIntensity * 0.8;
     finalColor.g += rainbow * lineIntensity * 0.6;
     finalColor.b += rainbow * lineIntensity * 0.7;
