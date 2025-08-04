@@ -14,7 +14,20 @@
     "allow": "允許",
     "skip": "跳過",
     "chooseImage": "選擇圖片",
-    "cancel": "取消"
+    "cancel": "取消",
+    "continue": "繼續"
+  },
+  "direction": {
+    "chooseEffect": "選擇光柵效果",
+    "subtitle": "選擇您的光柵效果方向",
+    "vertical": "垂直效果",
+    "horizontal": "水平效果",
+    "verticalDescription": "左右傾斜時圖片會變化",
+    "horizontalDescription": "上下傾斜時圖片會變化",
+    "tiltLeftRight": "左右傾斜",
+    "tiltUpDown": "上下傾斜",
+    "tip": "專業提示",
+    "tipDescription": "您稍後可以更改此設定，所以不用擔心現在選錯！"
   },
   "modes": {
     "controlMode": "控制模式",
@@ -49,7 +62,10 @@
     "strength": "強度",
     "view": "視角",
     "tiltDevice": "傾斜您的設備以查看效果",
+    "tiltDeviceHorizontally": "左右傾斜您的設備以查看效果",
+    "tiltDeviceVertically": "上下傾斜您的設備以查看效果",
     "dragHorizontally": "水平拖拽以查看光柵效果",
+    "dragVertically": "垂直拖拽以查看光柵效果",
     "manualControl": "手動控制",
     "left": "左",
     "center": "中",

@@ -4,12 +4,14 @@ import { useI18n } from "vue-i18n";
 import { TresCanvas } from "@tresjs/core";
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping } from "three";
 import LenticularPlane from "./LenticularPlane.vue";
+import type { LenticularDirection } from "./DirectionSelector.vue";
 
 const { t } = useI18n();
 
 const props = defineProps<{
   images: string[];
   tiltValue: number;
+  direction: LenticularDirection;
   isGyroscopeSupported: boolean;
   gyroscopeEnabled: boolean;
   gyroscopePermissionGranted: boolean;
@@ -23,6 +25,7 @@ const canvasContainer = ref<HTMLElement>();
 const manualTilt = ref(0);
 const isDragging = ref(false);
 const startX = ref(0);
+const startY = ref(0);
 const currentTilt = ref(0);
 
 // Mobile detection for performance optimizations
@@ -82,18 +85,30 @@ const updateManualTilt = (newTilt: number) => {
 };
 
 // Manual drag/swipe handlers
-const handleStart = (clientX: number) => {
+const handleStart = (clientX: number, clientY: number) => {
   isDragging.value = true;
   startX.value = clientX;
+  startY.value = clientY;
 };
 
-const handleMove = (clientX: number) => {
+const handleMove = (clientX: number, clientY: number) => {
   if (!isDragging.value) return;
 
-  const deltaX = clientX - startX.value;
   const sensitivity =
     props.gyroscopeEnabled && props.gyroscopePermissionGranted ? 0.5 : 1;
-  const newTilt = Math.max(-1, Math.min(1, (deltaX * sensitivity) / 200));
+
+  let newTilt = 0;
+
+  if (props.direction === "vertical") {
+    // Vertical lenticular effect - use horizontal drag
+    const deltaX = clientX - startX.value;
+    newTilt = Math.max(-1, Math.min(1, (deltaX * sensitivity) / 200));
+  } else {
+    // Horizontal lenticular effect - use vertical drag
+    const deltaY = clientY - startY.value;
+    // Invert the Y direction for more intuitive interaction
+    newTilt = Math.max(-1, Math.min(1, (-deltaY * sensitivity) / 200));
+  }
 
   updateManualTilt(newTilt);
 };
@@ -123,11 +138,11 @@ const handleEnd = () => {
 // Mouse events
 const handleMouseDown = (event: MouseEvent) => {
   event.preventDefault();
-  handleStart(event.clientX);
+  handleStart(event.clientX, event.clientY);
 };
 
 const handleMouseMove = (event: MouseEvent) => {
-  handleMove(event.clientX);
+  handleMove(event.clientX, event.clientY);
 };
 
 const handleMouseUp = () => {
@@ -143,14 +158,14 @@ const handleTouchStart = (event: TouchEvent) => {
   }
 
   event.preventDefault();
-  handleStart(event.touches[0].clientX);
+  handleStart(event.touches[0].clientX, event.touches[0].clientY);
 };
 
 const handleTouchMove = (event: TouchEvent) => {
   // Only prevent default if we're actually dragging
   if (isDragging.value) {
     event.preventDefault();
-    handleMove(event.touches[0].clientX);
+    handleMove(event.touches[0].clientX, event.touches[0].clientY);
   }
 };
 
@@ -231,7 +246,19 @@ onUnmounted(() => {
             class="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-2 text-center"
           >
             <div class="text-sm font-bold text-white">
-              {{ currentTilt > 0 ? "R" : currentTilt < 0 ? "L" : "C" }}
+              {{
+                direction === "vertical"
+                  ? currentTilt > 0
+                    ? "R"
+                    : currentTilt < 0
+                    ? "L"
+                    : "C"
+                  : currentTilt > 0
+                  ? "U"
+                  : currentTilt < 0
+                  ? "D"
+                  : "C"
+              }}
             </div>
             <div class="text-xs text-slate-300">
               {{ t("preview.view") }}
@@ -275,7 +302,11 @@ onUnmounted(() => {
             :intensity="0.8"
           />
 
-          <LenticularPlane :images="images" :tilt="currentTilt" />
+          <LenticularPlane
+            :images="images"
+            :tilt="currentTilt"
+            :direction="direction"
+          />
         </TresCanvas>
 
         <!-- Instructions overlay -->
@@ -309,8 +340,12 @@ onUnmounted(() => {
               <span class="text-xs md:text-sm">
                 {{
                   gyroscopeEnabled && gyroscopePermissionGranted
-                    ? t("preview.tiltDevice")
-                    : t("preview.dragHorizontally")
+                    ? direction === "vertical"
+                      ? t("preview.tiltDeviceHorizontally")
+                      : t("preview.tiltDeviceVertically")
+                    : direction === "vertical"
+                    ? t("preview.dragHorizontally")
+                    : t("preview.dragVertically")
                 }}
               </span>
             </div>

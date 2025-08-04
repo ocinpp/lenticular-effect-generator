@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import StartScreen from "./components/StartScreen.vue";
+import DirectionSelector, {
+  type LenticularDirection,
+} from "./components/DirectionSelector.vue";
 import ImageUploader from "./components/ImageUploader.vue";
 import ImageCropper from "./components/ImageCropper.vue";
 import LenticularCard from "./components/LenticularCard.vue";
@@ -23,7 +26,10 @@ interface ImageData {
   };
 }
 
-const currentStep = ref<"start" | "upload" | "crop" | "preview">("start");
+const currentStep = ref<"start" | "direction" | "upload" | "crop" | "preview">(
+  "start"
+);
+const selectedDirection = ref<LenticularDirection>("vertical");
 const images = ref<ImageData[]>([]);
 const currentImageIndex = ref(0);
 const maxImages = 5;
@@ -35,9 +41,18 @@ const gyroscopePermissionGranted = ref(false);
 const isGyroscopeSupported = ref(false);
 const orientationHandler = ref<InstanceType<typeof DeviceOrientationHandler>>();
 
-const startImageSelection = () => {
+const startDirectionSelection = () => {
+  currentStep.value = "direction";
+};
+
+const handleDirectionSelected = (direction: LenticularDirection) => {
+  selectedDirection.value = direction;
   currentStep.value = "upload";
   currentImageIndex.value = 0;
+};
+
+const goBackToStart = () => {
+  currentStep.value = "start";
 };
 
 const handleImageUpload = (imageData: string) => {
@@ -198,9 +213,16 @@ onMounted(() => {
       :is-gyroscope-supported="isGyroscopeSupported"
       :gyroscope-enabled="gyroscopeEnabled"
       :gyroscope-permission-granted="gyroscopePermissionGranted"
-      @start="startImageSelection"
+      @start="startDirectionSelection"
       @toggle-mode="toggleMode"
       @enable-gyroscope="enableGyroscope"
+    />
+
+    <!-- Direction Selection Screen -->
+    <DirectionSelector
+      v-if="currentStep === 'direction'"
+      @direction-selected="handleDirectionSelected"
+      @back="goBackToStart"
     />
 
     <!-- Upload Interface -->
@@ -361,6 +383,7 @@ onMounted(() => {
         <LenticularCard
           :images="images.map((img: ImageData) => img.croppedUrl || img.originalUrl)"
           :tilt-value="tiltValue"
+          :direction="selectedDirection"
           :is-gyroscope-supported="isGyroscopeSupported"
           :gyroscope-enabled="gyroscopeEnabled"
           :gyroscope-permission-granted="gyroscopePermissionGranted"
@@ -371,6 +394,7 @@ onMounted(() => {
       <!-- Download Button Component -->
       <DownloadButton
         :images="images.map((img: ImageData) => img.croppedUrl || img.originalUrl)"
+        :direction="selectedDirection"
         :gyroscope-enabled="gyroscopeEnabled"
         :gyroscope-permission-granted="gyroscopePermissionGranted"
         :current-tilt="tiltValue"
@@ -391,6 +415,7 @@ onMounted(() => {
     <!-- Device Orientation Handler -->
     <DeviceOrientationHandler
       ref="orientationHandler"
+      :direction="selectedDirection"
       @tilt-change="handleTiltChange"
       @gyroscope-support="handleGyroscopeSupport"
       @permission-granted="handlePermissionGranted"

@@ -2,11 +2,13 @@
 import { ref, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import GIF from "gif.js";
+import type { LenticularDirection } from "./DirectionSelector.vue";
 
 const { t } = useI18n();
 
 const props = defineProps<{
   images: string[];
+  direction: LenticularDirection;
   isVisible: boolean;
 }>();
 
@@ -281,7 +283,14 @@ const renderLenticularFrame = (
   }
 
   try {
-    renderLenticularEffect(ctx, loadedImages.value, tiltValue, width, height);
+    renderLenticularEffect(
+      ctx,
+      loadedImages.value,
+      tiltValue,
+      width,
+      height,
+      props.direction
+    );
   } catch (error) {
     console.warn("Error rendering lenticular effect, using fallback:", error);
     createFallbackFrame(ctx, width, height, tiltValue);
@@ -295,7 +304,8 @@ const renderLenticularEffect = (
   images: HTMLImageElement[],
   tiltValue: number,
   width: number,
-  height: number
+  height: number,
+  direction: LenticularDirection
 ) => {
   // Clear canvas
   ctx.fillStyle = "#000000";
@@ -311,93 +321,189 @@ const renderLenticularEffect = (
   // const idx2 = Math.max(0, Math.min(imageIndex2, images.length - 1))
 
   // Simplified strip rendering for better performance
-  const stripWidth = Math.max(4, Math.floor(width * 0.02)); // Wider strips
-  const numStrips = Math.ceil(width / stripWidth);
+  if (direction === "vertical") {
+    // Vertical lenticular effect - horizontal strips
+    const stripWidth = Math.max(4, Math.floor(width * 0.02)); // Wider strips
+    const numStrips = Math.ceil(width / stripWidth);
 
-  for (let strip = 0; strip < numStrips; strip++) {
-    const x = strip * stripWidth;
-    const actualStripWidth = Math.min(stripWidth, width - x);
+    for (let strip = 0; strip < numStrips; strip++) {
+      const x = strip * stripWidth;
+      const actualStripWidth = Math.min(stripWidth, width - x);
 
-    // Reduced variation for smoother effect
-    const stripVariation = Math.sin(strip * 0.1) * 0.08;
-    const stripTilt = Math.max(-1, Math.min(1, tiltValue + stripVariation));
+      // Reduced variation for smoother effect
+      const stripVariation = Math.sin(strip * 0.1) * 0.08;
+      const stripTilt = Math.max(-1, Math.min(1, tiltValue + stripVariation));
 
-    const stripImageSelector = (stripTilt + 1) * 0.5 * (images.length - 1);
-    const stripIdx1 = Math.max(
-      0,
-      Math.min(Math.floor(stripImageSelector), images.length - 1)
-    );
-    const stripIdx2 = Math.max(
-      0,
-      Math.min(Math.ceil(stripImageSelector), images.length - 1)
-    );
-    const stripMix = stripImageSelector - stripIdx1;
+      const stripImageSelector = (stripTilt + 1) * 0.5 * (images.length - 1);
+      const stripIdx1 = Math.max(
+        0,
+        Math.min(Math.floor(stripImageSelector), images.length - 1)
+      );
+      const stripIdx2 = Math.max(
+        0,
+        Math.min(Math.ceil(stripImageSelector), images.length - 1)
+      );
+      const stripMix = stripImageSelector - stripIdx1;
 
-    // Draw strip
-    if (images[stripIdx1] && images[stripIdx1].complete) {
-      try {
-        const sourceX = (x / width) * images[stripIdx1].width;
-        const sourceWidth =
-          (actualStripWidth / width) * images[stripIdx1].width;
+      // Draw strip
+      if (images[stripIdx1] && images[stripIdx1].complete) {
+        try {
+          const sourceX = (x / width) * images[stripIdx1].width;
+          const sourceWidth =
+            (actualStripWidth / width) * images[stripIdx1].width;
 
-        ctx.globalAlpha = 1 - stripMix;
-        ctx.drawImage(
-          images[stripIdx1],
-          sourceX,
-          0,
-          sourceWidth,
-          images[stripIdx1].height,
-          x,
-          0,
-          actualStripWidth,
-          height
-        );
-
-        if (
-          stripIdx2 !== stripIdx1 &&
-          images[stripIdx2] &&
-          images[stripIdx2].complete
-        ) {
-          ctx.globalAlpha = stripMix;
-          const sourceX2 = (x / width) * images[stripIdx2].width;
-          const sourceWidth2 =
-            (actualStripWidth / width) * images[stripIdx2].width;
-
+          ctx.globalAlpha = 1 - stripMix;
           ctx.drawImage(
-            images[stripIdx2],
-            sourceX2,
+            images[stripIdx1],
+            sourceX,
             0,
-            sourceWidth2,
-            images[stripIdx2].height,
+            sourceWidth,
+            images[stripIdx1].height,
             x,
             0,
             actualStripWidth,
             height
           );
-        }
 
-        ctx.globalAlpha = 1;
-      } catch (error) {
-        // Simple fallback
-        const hue = stripIdx1 * 60;
-        ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
-        ctx.fillRect(x, 0, actualStripWidth, height);
+          if (
+            stripIdx2 !== stripIdx1 &&
+            images[stripIdx2] &&
+            images[stripIdx2].complete
+          ) {
+            ctx.globalAlpha = stripMix;
+            const sourceX2 = (x / width) * images[stripIdx2].width;
+            const sourceWidth2 =
+              (actualStripWidth / width) * images[stripIdx2].width;
+
+            ctx.drawImage(
+              images[stripIdx2],
+              sourceX2,
+              0,
+              sourceWidth2,
+              images[stripIdx2].height,
+              x,
+              0,
+              actualStripWidth,
+              height
+            );
+          }
+
+          ctx.globalAlpha = 1;
+        } catch (error) {
+          // Simple fallback
+          const hue = stripIdx1 * 60;
+          ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+          ctx.fillRect(x, 0, actualStripWidth, height);
+        }
+      }
+
+      // Reduced ridge lines for performance
+      if (strip % 10 === 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.05;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x, 0, 1, height);
+        ctx.restore();
       }
     }
+  } else {
+    // Horizontal lenticular effect - vertical strips
+    const stripHeight = Math.max(4, Math.floor(height * 0.02)); // Wider strips
+    const numStrips = Math.ceil(height / stripHeight);
 
-    // Reduced ridge lines for performance
-    if (strip % 10 === 0) {
-      ctx.save();
-      ctx.globalAlpha = 0.05;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x, 0, 1, height);
-      ctx.restore();
+    for (let strip = 0; strip < numStrips; strip++) {
+      const y = strip * stripHeight;
+      const actualStripHeight = Math.min(stripHeight, height - y);
+
+      // Reduced variation for smoother effect
+      const stripVariation = Math.sin(strip * 0.1) * 0.08;
+      const stripTilt = Math.max(-1, Math.min(1, tiltValue + stripVariation));
+
+      const stripImageSelector = (stripTilt + 1) * 0.5 * (images.length - 1);
+      const stripIdx1 = Math.max(
+        0,
+        Math.min(Math.floor(stripImageSelector), images.length - 1)
+      );
+      const stripIdx2 = Math.max(
+        0,
+        Math.min(Math.ceil(stripImageSelector), images.length - 1)
+      );
+      const stripMix = stripImageSelector - stripIdx1;
+
+      // Draw horizontal strip
+      if (images[stripIdx1] && images[stripIdx1].complete) {
+        try {
+          const sourceY = (y / height) * images[stripIdx1].height;
+          const sourceHeight =
+            (actualStripHeight / height) * images[stripIdx1].height;
+
+          ctx.globalAlpha = 1 - stripMix;
+          ctx.drawImage(
+            images[stripIdx1],
+            0,
+            sourceY,
+            images[stripIdx1].width,
+            sourceHeight,
+            0,
+            y,
+            width,
+            actualStripHeight
+          );
+
+          if (
+            stripIdx2 !== stripIdx1 &&
+            images[stripIdx2] &&
+            images[stripIdx2].complete
+          ) {
+            ctx.globalAlpha = stripMix;
+            const sourceY2 = (y / height) * images[stripIdx2].height;
+            const sourceHeight2 =
+              (actualStripHeight / height) * images[stripIdx2].height;
+
+            ctx.drawImage(
+              images[stripIdx2],
+              0,
+              sourceY2,
+              images[stripIdx2].width,
+              sourceHeight2,
+              0,
+              y,
+              width,
+              actualStripHeight
+            );
+          }
+
+          ctx.globalAlpha = 1;
+        } catch (error) {
+          // Simple fallback
+          const hue = stripIdx1 * 60;
+          ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+          ctx.fillRect(0, y, width, actualStripHeight);
+        }
+      }
+
+      // Reduced ridge lines for performance
+      if (strip % 10 === 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.05;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, y, width, 1);
+        ctx.restore();
+      }
     }
   }
 
   // Minimal shimmer effect
-  const shimmerGradient = ctx.createLinearGradient(0, 0, width, 0);
   const shimmerOffset = (tiltValue + 1) * 0.5;
+  let shimmerGradient: CanvasGradient;
+
+  if (direction === "vertical") {
+    // Horizontal shimmer for vertical lenticular effect
+    shimmerGradient = ctx.createLinearGradient(0, 0, width, 0);
+  } else {
+    // Vertical shimmer for horizontal lenticular effect
+    shimmerGradient = ctx.createLinearGradient(0, 0, 0, height);
+  }
 
   shimmerGradient.addColorStop(
     Math.max(0, shimmerOffset - 0.1),
