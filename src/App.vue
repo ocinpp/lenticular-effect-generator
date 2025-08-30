@@ -416,6 +416,7 @@ onMounted(() => {
     <DeviceOrientationHandler
       ref="orientationHandler"
       :direction="selectedDirection"
+      :gyroscope-enabled="gyroscopeEnabled"
       @tilt-change="handleTiltChange"
       @gyroscope-support="handleGyroscopeSupport"
       @permission-granted="handlePermissionGranted"
