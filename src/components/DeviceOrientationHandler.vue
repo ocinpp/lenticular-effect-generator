@@ -7,6 +7,7 @@ const { t } = useI18n();
 
 const props = defineProps<{
   direction: LenticularDirection;
+  gyroscopeEnabled: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -49,6 +50,11 @@ const smoothOrientation = (newValue: number): number => {
 };
 
 const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+  // Only process orientation data when gyroscope mode is enabled
+  if (!props.gyroscopeEnabled) {
+    return;
+  }
+
   // Throttle orientation updates for performance
   const now = Date.now();
   if (now - lastOrientationUpdate.value < ORIENTATION_THROTTLE) {
